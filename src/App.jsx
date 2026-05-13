@@ -15,7 +15,7 @@ export default function App(){
         <div className="toolbar">
           <Toolbar 
             activeTool={activeTool}
-            onToolChange={setActiveTool}
+            setActiveTool={setActiveTool}
           />
         </div>
       </main>
