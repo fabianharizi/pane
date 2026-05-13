@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import './Board.css'
+import styles from './Board.module.css'
 
 export default function Board(){
   const boardRef = useRef(null);
@@ -8,6 +8,11 @@ export default function Board(){
   useEffect(() => {
     const board = boardRef.current;
     const canvas = canvasRef.current;
+    canvas.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+      inline: "center"
+    });
 
     if(board){
       let isDragging = false;
@@ -21,7 +26,7 @@ export default function Board(){
           isDragging = true;
           boardPos = {x: board.scrollLeft, y: board.scrollTop}
           coords = {x: e.clientX, y: e.clientY};
-          console.log("Started at X:"+coords.x+" Y:"+coords.y)
+          // console.log("Started at X:"+coords.x+" Y:"+coords.y)
         }
       };
 
@@ -32,13 +37,13 @@ export default function Board(){
             y: coords.y - e.clientY
           }
           board.scrollTo(boardPos.x + offset.x, boardPos.y + offset.y)
-          console.log("Moving by X:"+offset.x+" Y:"+offset.y)
+          // console.log("Moving by X:"+offset.x+" Y:"+offset.y)
         }
       };
 
       const handleMouseUp = (e) => {
         isDragging = false;
-        console.log("Mouse Up")
+        // console.log("Mouse Up")
       };
 
       board.addEventListener('mousedown', handleMouseDown);
@@ -51,8 +56,8 @@ export default function Board(){
   }, []);
 
   return (
-    <div className="board" ref={boardRef}>
-      <div className="canvas" ref={canvasRef}>
+    <div className={styles.board} ref={boardRef}>
+      <div className={styles.canvas} ref={canvasRef}>
         
       </div>
     </div> 

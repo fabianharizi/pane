@@ -1,12 +1,16 @@
 import './App.css'
 import Board from './components/Board/Board';
+import Toolbar from './components/Toolbar/Toolbar';
 
 export default function App(){
   return (
     <>
-      <div className="container">
+      <main className="container">
         <Board />
-      </div>
+        <div className="toolbar">
+          <Toolbar />
+        </div>
+      </main>
     </>
   )
 }

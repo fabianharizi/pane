@@ -1,0 +1,43 @@
+.toolbar{
+  background-color: #fff;
+  padding: 7px;
+  border-radius: 5px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.toolbar .group{
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 5px;
+}
+.toolbar .group:not(:nth-last-child(1)){
+  padding-right: 5px;
+  border-right: 1px solid #0003;
+  margin-right: 5px;
+}
+
+.toolbar button{
+  width: 40px;
+  height: 40px;
+  border-radius: 3px;
+  background-color: transparent;
+  border: 0;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+.toolbar button svg{
+  color: #5f5f5f;
+  stroke-width: 1.5px;
+}
+.toolbar button:hover{
+  background-color: #0001;
+}
+.toolbar button.selected{
+  background-color: #6c6cff20;
+}
+.toolbar button.selected svg{
+  color: #6c6cff;
+}
