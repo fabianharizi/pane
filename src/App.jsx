@@ -11,6 +11,7 @@ export default function App(){
       <main className="container">
         <Board 
           activeTool={activeTool}
+            setActiveTool={setActiveTool}
         />
         <div className="toolbar">
           <Toolbar 

@@ -9,7 +9,7 @@ export default function Toolbar({activeTool, setActiveTool}){
       {id: "move", icon: Hand}
     ],
     [
-      {id: "shape", icon: RectangleHorizontal}
+      {id: "rectangle", icon: RectangleHorizontal}
     ]
   ]
   
