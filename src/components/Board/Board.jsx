@@ -3,6 +3,7 @@ import styles from './Board.module.css'
 import { HeartIcon } from 'lucide-react';
 import Shape from '../Shape/Shape';
 import MouseInfo from '../../utils/MouseInfo';
+import Area from '../Area/Area';
 
 export default function Board({activeTool, setActiveTool}){
   const boardRef = useRef(null);
@@ -117,8 +118,7 @@ export default function Board({activeTool, setActiveTool}){
           width={el.width}
           height={el.height}
         />)}
-        {area ? <Shape 
-          shape={area.shape}
+        {area ? <Area 
           x={area.x}
           y={area.y}
           width={area.width}
