@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import styles from './Board.module.css'
 import { HeartIcon } from 'lucide-react';
 import Shape from '../Shape/Shape';
+import MouseInfo from '../../utils/MouseInfo';
 
 export default function Board({activeTool, setActiveTool}){
   const boardRef = useRef(null);
@@ -25,39 +26,28 @@ export default function Board({activeTool, setActiveTool}){
     const board = boardRef.current;
     const canvas = canvasRef.current;
 
-    let isDragging = false;
     let boardPos = {x: 0, y: 0}
-    let coords = {x: 0, y: 0};
-    let offset = {x: 0, y: 0};
+    let m = new MouseInfo();
     
     switch (activeTool) {
       case "move":
         board.style.cursor = "grab"
-
+        
         const moveMouseDown = (e) => {
-          board.style.cursor = "grabbing"
           e.preventDefault();
-          isDragging = true;
+          m.start(e);
+          board.style.cursor = "grabbing"
           boardPos = {x: board.scrollLeft, y: board.scrollTop}
-          coords = {x: e.clientX, y: e.clientY};
-          console.log("Started at X:"+coords.x+" Y:"+coords.y)
         };
 
         const moveMouseMove = (e) => {
-          if(isDragging == true){
-            offset = {
-              x: coords.x - e.clientX,
-              y: coords.y - e.clientY
-            }
-            board.scrollTo(boardPos.x + offset.x, boardPos.y + offset.y)
-            console.log("Moving by X:"+offset.x+" Y:"+offset.y)
+          if(m.isDragging){
+            board.scrollTo(boardPos.x + m.offset.x, boardPos.y + m.offset.y)
           }
         };
 
         const moveMouseUp = (e) => {
-          isDragging = false;
           board.style.cursor = "grab"
-          console.log("Mouse Up")
         };
 
         board.addEventListener('mousedown', moveMouseDown);
@@ -70,41 +60,33 @@ export default function Board({activeTool, setActiveTool}){
 
       case ("rectangle"):
         board.style.cursor = "crosshair"
+        m = new MouseInfo();
 
         const rectMouseDown = (e) => {
           e.preventDefault();
-          isDragging = true;
+          m.start(e);
           boardPos = {x: board.scrollLeft, y: board.scrollTop}
-          coords = {x: e.clientX, y: e.clientY};
-          console.log("Started at X:"+coords.x+" Y:"+coords.y)
         };
 
         const rectMouseMove = (e) => {
-          if(isDragging == true){
-            offset = {
-              x: -(coords.x - e.clientX),
-              y: -(coords.y - e.clientY)
-            }
+          if(m.isDragging){
             setArea({
               shape: "rect",
-              x: coords.x + boardPos.x + Math.min(offset.x, 0),
-              y: coords.y + boardPos.y + Math.min(offset.y, 0),
-              width: Math.abs(offset.x),
-              height: Math.abs(offset.y)
+              x: m.coords.x + boardPos.x + Math.min(-(m.offset.x), 0),
+              y: m.coords.y + boardPos.y + Math.min(-(m.offset.y), 0),
+              width: Math.abs(m.offset.x),
+              height: Math.abs(m.offset.y)
             })
-            console.log("Moving by X:"+offset.x+" Y:"+offset.y)
           }
         };
 
         const rectMouseUp = (e) => {
-          isDragging = false;
-          console.log("Mouse Up")
           setElements(prev => [...prev, {
             shape: "rect",
-            x: coords.x + boardPos.x + Math.min(offset.x, 0),
-            y: coords.y + boardPos.y + Math.min(offset.y, 0),
-            width: Math.abs(offset.x),
-            height: Math.abs(offset.y)
+            x: m.coords.x + boardPos.x + Math.min(-(m.offset.x), 0),
+            y: m.coords.y + boardPos.y + Math.min(-(m.offset.y), 0),
+            width: Math.abs(m.offset.x),
+            height: Math.abs(m.offset.y)
           }])
           setArea(null)
           setActiveTool("select")

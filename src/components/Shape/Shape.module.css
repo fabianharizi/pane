@@ -1,8 +1,8 @@
 .rect{
-  background-color: #fff9;
   position: absolute;
   top: var(--y);
   left: var(--x);
   width: var(--width);
   height: var(--height);
+  border: 2px solid #fff;
 }
