@@ -25,6 +25,7 @@ export default function Toolbar({activeTool, setActiveTool}){
           setActiveTool("select")
         }
       }
+      
       window.addEventListener('keydown', handleKeyDown);
       window.addEventListener('keyup', handleKeyUp);
       return () => {window.removeEventListener('keydown', handleKeyDown),
