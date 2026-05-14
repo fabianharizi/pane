@@ -4,8 +4,8 @@ export default function Area(props){
   return(
     <div className={
       styles.area + " " +(
-      (props.shape == "rectangle") ? styles.rectangle : 
-      (props.shape == "oval") ? styles.oval : ""
+      (props.mode == "rectangle") ? styles.rectangle : 
+      (props.mode == "oval") ? styles.oval : ""
     )} style={{
       "--x": props.x + "px",
       "--y": props.y + "px",

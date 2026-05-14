@@ -2,16 +2,21 @@ import { useEffect, useRef, useState } from 'react';
 import styles from './Board.module.css'
 import { HeartIcon } from 'lucide-react';
 import Shape from '../Shape/Shape';
-import MouseInfo from '../../utils/MouseInfo';
+import MouseInfo from '../../utils/classes/MouseInfo';
 import Area from '../Area/Area';
+import getMaxCanvasSize from '../../utils/functions/getMaxCanvasSize';
 
 export default function Board({activeTool, setActiveTool}){
+  const [canvasSize, setCanvasSize] = useState(5000)
+  const [canvasDiff, setCanvasDiff] = useState(0)
+
   const boardRef = useRef(null);
   const canvasRef = useRef(null);
 
   const [elements, setElements] = useState([])
   const [area, setArea] = useState(null)
 
+  // Set position to the center of canvas
   useEffect(() => {
     const board = boardRef.current;
     const canvas = canvasRef.current;
@@ -23,6 +28,13 @@ export default function Board({activeTool, setActiveTool}){
     });
   },[])
 
+  useEffect(() => {
+    setCanvasDiff((getMaxCanvasSize(elements, canvasSize) - canvasSize) / 2)
+    setCanvasSize(getMaxCanvasSize(elements, canvasSize))
+  }, [elements])
+
+
+  // Handle events for all tools in toolbar
   useEffect(() => {
     const board = boardRef.current;
     const canvas = canvasRef.current;
@@ -111,7 +123,7 @@ export default function Board({activeTool, setActiveTool}){
 
   return (
     <div className={styles.board} ref={boardRef}>
-      <div className={styles.canvas} ref={canvasRef}>
+      <div className={styles.canvas} style={{'--size': canvasSize + "px"}} ref={canvasRef}>
         {elements.map(el => <Shape 
           shape={el.shape}
           x={el.x}
@@ -120,7 +132,7 @@ export default function Board({activeTool, setActiveTool}){
           height={el.height}
         />)}
         {area ? <Area 
-          shape={activeTool}
+          mode={activeTool}
           x={area.x}
           y={area.y}
           width={area.width}

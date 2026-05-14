@@ -4,15 +4,17 @@
   left: var(--x);
   width: var(--width);
   height: var(--height);
-  border: 2px solid #fff8;
-  background-color: #fff2;
   z-index: 10000;
 }
 
 .rectangle{
   border-radius: 0;
+  border: 2px solid #fff8;
+  background-color: #fff2;
 }
 
 .oval{
   border-radius: 100%;
+  border: 2px solid #fff8;
+  background-color: #fff2;
 }

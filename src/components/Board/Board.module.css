@@ -29,8 +29,8 @@
 .canvas{
   --grid-size: 50px;
   position: relative;
-  width: 5000px;
-  height: 5000px;
+  width: var(--size);
+  height: var(--size);
   background-size: var(--grid-size) var(--grid-size);
   background-image: linear-gradient(to right, #ffffff07 1px, transparent 1px),
                     linear-gradient(to bottom, #ffffff07 1px, transparent 1px);

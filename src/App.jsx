@@ -13,11 +13,13 @@ export default function App(){
           activeTool={activeTool}
             setActiveTool={setActiveTool}
         />
-        <div className="toolbar">
-          <Toolbar 
-            activeTool={activeTool}
-            setActiveTool={setActiveTool}
-          />
+        <div className="interface">
+          <div className="toolbar">
+            <Toolbar 
+              activeTool={activeTool}
+              setActiveTool={setActiveTool}
+            />
+          </div>
         </div>
       </main>
     </>
