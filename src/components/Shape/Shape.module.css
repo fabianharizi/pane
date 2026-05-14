@@ -1,8 +1,16 @@
-.rect{
+.shape{
   position: absolute;
   top: var(--y);
   left: var(--x);
   width: var(--width);
   height: var(--height);
   border: 2px solid #fff;
+}
+
+.rectangle{
+  border-radius: 0;
+}
+
+.oval{
+  border-radius: 100%;
 }

@@ -1,4 +1,4 @@
-import { Hand, MousePointer2, Pointer, RectangleHorizontal } from 'lucide-react'
+import { Circle, Hand, MousePointer2, Pointer, RectangleHorizontal } from 'lucide-react'
 import styles from './Toolbar.module.css'
 import { act, useEffect } from 'react';
 
@@ -9,7 +9,8 @@ export default function Toolbar({activeTool, setActiveTool}){
       {id: "move", icon: Hand}
     ],
     [
-      {id: "rectangle", icon: RectangleHorizontal}
+      {id: "rectangle", icon: RectangleHorizontal},
+      {id: "oval", icon: Circle}
     ]
   ]
   

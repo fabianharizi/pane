@@ -58,21 +58,22 @@ export default function Board({activeTool, setActiveTool}){
                       board.removeEventListener('mousemove', moveMouseMove)
                       board.removeEventListener('mouseup', moveMouseUp)};
         break;
-
+      
       case ("rectangle"):
+      case ("oval"):
         board.style.cursor = "crosshair"
         m = new MouseInfo();
 
-        const rectMouseDown = (e) => {
+        const shapeMouseDown = (e) => {
           e.preventDefault();
           m.start(e);
           boardPos = {x: board.scrollLeft, y: board.scrollTop}
         };
 
-        const rectMouseMove = (e) => {
+        const shapeMouseMove = (e) => {
           if(m.isDragging){
             setArea({
-              shape: "rect",
+              shape: activeTool,
               x: m.coords.x + boardPos.x + Math.min(-(m.offset.x), 0),
               y: m.coords.y + boardPos.y + Math.min(-(m.offset.y), 0),
               width: Math.abs(m.offset.x),
@@ -81,9 +82,9 @@ export default function Board({activeTool, setActiveTool}){
           }
         };
 
-        const rectMouseUp = (e) => {
+        const shapeMouseUp = (e) => {
           setElements(prev => [...prev, {
-            shape: "rect",
+            shape: activeTool,
             x: m.coords.x + boardPos.x + Math.min(-(m.offset.x), 0),
             y: m.coords.y + boardPos.y + Math.min(-(m.offset.y), 0),
             width: Math.abs(m.offset.x),
@@ -93,12 +94,12 @@ export default function Board({activeTool, setActiveTool}){
           setActiveTool("select")
         };
 
-        board.addEventListener('mousedown', rectMouseDown);
-        board.addEventListener('mousemove', rectMouseMove);
-        board.addEventListener('mouseup', rectMouseUp);
-        return () => {board.removeEventListener('mousedown', rectMouseDown)
-                      board.removeEventListener('mousemove', rectMouseMove)
-                      board.removeEventListener('mouseup', rectMouseUp)};
+        board.addEventListener('mousedown', shapeMouseDown);
+        board.addEventListener('mousemove', shapeMouseMove);
+        board.addEventListener('mouseup', shapeMouseUp);
+        return () => {board.removeEventListener('mousedown', shapeMouseDown)
+                      board.removeEventListener('mousemove', shapeMouseMove)
+                      board.removeEventListener('mouseup', shapeMouseUp)};
 
         break;
     
@@ -119,6 +120,7 @@ export default function Board({activeTool, setActiveTool}){
           height={el.height}
         />)}
         {area ? <Area 
+          shape={activeTool}
           x={area.x}
           y={area.y}
           width={area.width}
