@@ -4,11 +4,11 @@ import { HeartIcon } from 'lucide-react';
 import Shape from '../Shape/Shape';
 import MouseInfo from '../../utils/classes/MouseInfo';
 import Area from '../Area/Area';
-import getMaxCanvasSize from '../../utils/functions/getMaxCanvasSize';
+import getMaxCanvasSize from '../../utils/functions/getMaxContentSize';
+import getMaxContentSize from './../../utils/functions/getMaxContentSize';
 
 export default function Board({activeTool, setActiveTool}){
-  const [canvasSize, setCanvasSize] = useState(5000)
-  const [canvasDiff, setCanvasDiff] = useState(0)
+  const [contentSize, setContentSize] = useState(0)
 
   const boardRef = useRef(null);
   const canvasRef = useRef(null);
@@ -28,10 +28,12 @@ export default function Board({activeTool, setActiveTool}){
     });
   },[])
 
+
   useEffect(() => {
-    setCanvasDiff((getMaxCanvasSize(elements, canvasSize) - canvasSize) / 2)
-    setCanvasSize(getMaxCanvasSize(elements, canvasSize))
+    setContentSize(getMaxContentSize(elements, 5000)) // 5000px is the default canvas size
+    console.log(elements, contentSize)
   }, [elements])
+
 
 
   // Handle events for all tools in toolbar
@@ -123,11 +125,11 @@ export default function Board({activeTool, setActiveTool}){
 
   return (
     <div className={styles.board} ref={boardRef}>
-      <div className={styles.canvas} style={{'--size': canvasSize + "px"}} ref={canvasRef}>
+      <div className={styles.canvas} style={{'--content-size': contentSize + "px"}} ref={canvasRef}>
         {elements.map(el => <Shape 
           shape={el.shape}
-          x={el.x}
-          y={el.y}
+          x={el.x + (contentSize)}
+          y={el.y + (contentSize)}
           width={el.width}
           height={el.height}
         />)}

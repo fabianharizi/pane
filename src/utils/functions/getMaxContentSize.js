@@ -1,4 +1,4 @@
-export default function getMaxCanvasSize(elements, canvasSize){
+export default function getMaxContentSize(elements, canvasSize){
   let maxDistance = 0;
   elements.forEach(element => {
     if(maxDistance < getFurthestDistance(element, canvasSize)){
@@ -6,7 +6,7 @@ export default function getMaxCanvasSize(elements, canvasSize){
     }
   });
 
-  return canvasSize + (maxDistance * 2)
+  return maxDistance
 }
 
 
