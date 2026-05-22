@@ -1,145 +1,21 @@
 import { useEffect, useRef, useState } from 'react';
 import styles from './Board.module.css'
-import { HeartIcon } from 'lucide-react';
-import Shape from '../Shape/Shape';
-import MouseInfo from '../../utils/classes/MouseInfo';
-import Area from '../Area/Area';
-import getMaxCanvasSize from '../../utils/functions/getMaxContentSize';
-import getMaxContentSize from './../../utils/functions/getMaxContentSize';
+import useBoard from '../../utils/hooks/useBoard';
+import useMoveTool from '../../utils/hooks/useMoveTool';
 
 export default function Board({activeTool, setActiveTool}){
-  const [contentSize, setContentSize] = useState(0)
-
   const boardRef = useRef(null);
   const canvasRef = useRef(null);
 
-  const [elements, setElements] = useState([])
-  const [area, setArea] = useState(null)
+  const [boardState, scrollTo, scrollBy] = useBoard(boardRef, canvasRef);
 
-  // Set position to the center of canvas
-  useEffect(() => {
-    const board = boardRef.current;
-    const canvas = canvasRef.current;
-
-    canvas.scrollIntoView({
-      behavior: "smooth",
-      block: "center",
-      inline: "center"
-    });
-  },[])
-
-
-  useEffect(() => {
-    setContentSize(getMaxContentSize(elements, 5000)) // 5000px is the default canvas size
-    console.log(elements, contentSize)
-  }, [elements])
-
-
-
-  // Handle events for all tools in toolbar
-  useEffect(() => {
-    const board = boardRef.current;
-    const canvas = canvasRef.current;
-
-    let boardPos = {x: 0, y: 0}
-    let m = new MouseInfo();
-    
-    switch (activeTool) {
-      case "move":
-        board.style.cursor = "grab"
-        
-        const moveMouseDown = (e) => {
-          e.preventDefault();
-          m.start(e);
-          board.style.cursor = "grabbing"
-          boardPos = {x: board.scrollLeft, y: board.scrollTop}
-        };
-
-        const moveMouseMove = (e) => {
-          if(m.isDragging){
-            board.scrollTo(boardPos.x + m.offset.x, boardPos.y + m.offset.y)
-          }
-        };
-
-        const moveMouseUp = (e) => {
-          board.style.cursor = "grab"
-        };
-
-        board.addEventListener('mousedown', moveMouseDown);
-        board.addEventListener('mousemove', moveMouseMove);
-        board.addEventListener('mouseup', moveMouseUp);
-        return () => {board.removeEventListener('mousedown', moveMouseDown)
-                      board.removeEventListener('mousemove', moveMouseMove)
-                      board.removeEventListener('mouseup', moveMouseUp)};
-        break;
-      
-      case ("rectangle"):
-      case ("oval"):
-        board.style.cursor = "crosshair"
-        m = new MouseInfo();
-
-        const shapeMouseDown = (e) => {
-          e.preventDefault();
-          m.start(e);
-          boardPos = {x: board.scrollLeft, y: board.scrollTop}
-        };
-
-        const shapeMouseMove = (e) => {
-          if(m.isDragging){
-            setArea({
-              shape: activeTool,
-              x: m.coords.x + boardPos.x + Math.min(-(m.offset.x), 0),
-              y: m.coords.y + boardPos.y + Math.min(-(m.offset.y), 0),
-              width: Math.abs(m.offset.x),
-              height: Math.abs(m.offset.y)
-            })
-          }
-        };
-
-        const shapeMouseUp = (e) => {
-          setElements(prev => [...prev, {
-            shape: activeTool,
-            x: m.coords.x + boardPos.x + Math.min(-(m.offset.x), 0),
-            y: m.coords.y + boardPos.y + Math.min(-(m.offset.y), 0),
-            width: Math.abs(m.offset.x),
-            height: Math.abs(m.offset.y)
-          }])
-          setArea(null)
-          setActiveTool("select")
-        };
-
-        board.addEventListener('mousedown', shapeMouseDown);
-        board.addEventListener('mousemove', shapeMouseMove);
-        board.addEventListener('mouseup', shapeMouseUp);
-        return () => {board.removeEventListener('mousedown', shapeMouseDown)
-                      board.removeEventListener('mousemove', shapeMouseMove)
-                      board.removeEventListener('mouseup', shapeMouseUp)};
-
-        break;
-    
-      default:
-        board.style.cursor = "initial"
-        break;
-    }
-  }, [activeTool]);
+  // Toolset events
+  useMoveTool(boardRef, scrollTo, activeTool === 'move')
 
   return (
     <div className={styles.board} ref={boardRef}>
-      <div className={styles.canvas} style={{'--content-size': contentSize + "px"}} ref={canvasRef}>
-        {elements.map(el => <Shape 
-          shape={el.shape}
-          x={el.x + (contentSize)}
-          y={el.y + (contentSize)}
-          width={el.width}
-          height={el.height}
-        />)}
-        {area ? <Area 
-          mode={activeTool}
-          x={area.x}
-          y={area.y}
-          width={area.width}
-          height={area.height}
-        /> : ""}
+      <div className={styles.canvas} ref={canvasRef}>
+        
       </div>
     </div> 
   )
