@@ -9,7 +9,7 @@ export default function Board({activeTool, setActiveTool}){
 
   const [boardState, scrollTo, scrollBy] = useBoard(boardRef, canvasRef);
 
-  // Toolset events
+  // Install Tool Hooks
   useMoveTool(boardRef, scrollTo, activeTool === 'move')
 
   return (

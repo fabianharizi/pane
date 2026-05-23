@@ -1,6 +1,9 @@
 import { useEffect, useRef } from 'react';
 import useMouse from './useMouse';
 
+// This hook is used to implement the "Move" tool. 
+// It needs a condition to be active
+
 export default function useMoveTool(boardRef, scrollTo, active) {
   const [mouse, onMouseDown, onMouseMove, onMouseUp, setCursor] = useMouse(boardRef);
   const startScroll = useRef({ x: 0, y: 0 });

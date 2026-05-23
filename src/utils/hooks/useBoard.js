@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 
+// This hook is used to get and update board's info such as scroll position, size and coordinates
+
 export default function useBoard(boardRef, canvasRef) {
   const [boardState, setBoardState] = useState({
     width: 0,
@@ -10,6 +12,7 @@ export default function useBoard(boardRef, canvasRef) {
     y: 0,
   });
 
+  // Scroll board to the center and track scroll when moved manually
   useEffect(() => {
     const board = boardRef.current;
 
@@ -28,10 +31,11 @@ export default function useBoard(boardRef, canvasRef) {
     return () => board.removeEventListener('scroll', handleScroll);
   }, []);
 
+
+  // Track width, height on board size change
   useEffect(() => {
     const board = boardRef.current;
 
-    // size tracking
     const observer = new ResizeObserver(() => {
       setBoardState(prev => ({
         ...prev,
@@ -46,6 +50,7 @@ export default function useBoard(boardRef, canvasRef) {
     return () => observer.disconnect();
   }, []);
 
+  // Track scroll width, scroll height on canvas size change
   useEffect(() => {
     const board = boardRef.current;
     const canvas = canvasRef.current;
@@ -60,10 +65,11 @@ export default function useBoard(boardRef, canvasRef) {
       }));
     });
 
-    observer.observe(canvas); // watch canvas, read board
+    observer.observe(canvas);
     return () => observer.disconnect();
   }, []);
 
+  // Functions to control scroll position
   const scrollTo = (x, y) => {
     boardRef.current.scrollTo({ left: x, top: y });
   };
@@ -71,10 +77,6 @@ export default function useBoard(boardRef, canvasRef) {
   const scrollBy = (x, y) => {
     boardRef.current.scrollBy({ left: x, top: y });
   };
-
-  useEffect(() => {
-    console.log(boardState);
-  }, [boardState]);
 
   return [boardState, scrollTo, scrollBy];
 }
