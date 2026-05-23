@@ -5,6 +5,8 @@
   width: var(--width);
   height: var(--height);
   z-index: 10000;
+  border: 2px solid #6c6cff40;
+  background-color: #6c6cff20;
 }
 
 .rectangle{

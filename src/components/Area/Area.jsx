@@ -2,10 +2,10 @@ import styles from "./Area.module.css"
 
 export default function Area(props){
   const areaProps = {
-    x: (props.startX < props.x) ? props.startX : props.x,
-    y: (props.startY < props.y) ? props.startY : props.y,
-    width: (props.startX < props.x) ? props.x - props.startX : props.startX - props.x,
-    height: (props.startY < props.y) ? props.y - props.startY : props.startY - props.y,
+    x: Math.min(props.startX, props.x),
+    y: Math.min(props.startY, props.y),
+    width: Math.abs(props.x - props.startX),
+    height: Math.abs(props.y - props.startY),
   }
 
   return(

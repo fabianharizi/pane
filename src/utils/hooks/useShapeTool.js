@@ -34,15 +34,8 @@ export default function useShapeTool(boardRef, enableArea, disableArea, active) 
 
   // Create area as mouse moves
   useEffect(() => {
-    if (!active || !mouse.isDown) return;
-
-    enableArea(mouse.startX, mouse.startY, mouse.x, mouse.y)
-
-  }, [mouse.x, mouse.y]);
-
-  // Hide area as mouse lifts
-  useEffect(() => {
-    if (!active || !mouse.isDown) disableArea();
+    if (!active || !mouse.isDown) return disableArea();
     
-  }, [mouse.isDown]);
+    enableArea(mouse.startX, mouse.startY, mouse.x, mouse.y)
+  }, [mouse.x, mouse.y, mouse.isDown]);
 }
