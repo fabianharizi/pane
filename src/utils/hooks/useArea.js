@@ -9,15 +9,17 @@ export default function useArea(){
     startY: 0,
     x: 0,
     y: 0,
+    mode: "default"
   })
 
-  const enableArea = (startX, startY, x, y) => {
+  const enableArea = (startX, startY, x, y, mode) => {
     setArea({
       isVisible: true,  
       startX: startX,
       startY: startY,
       x: x,
       y: y,
+      mode: mode
     })
   }
 
