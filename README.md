@@ -6,7 +6,7 @@ A web-based interactive whiteboard built from scratch in React. The goal is to r
 
 ## Status
 
-Early development. Core canvas infrastructure is done. Tool system is actively being built out.
+Early development. Core canvas, tool dispatch system, and a callback-based hook architecture are in place. Drawing tools (rectangle, oval) and a pan tool work end-to-end.
 
 ---
 
@@ -14,72 +14,112 @@ Early development. Core canvas infrastructure is done. Tool system is actively b
 
 - Infinite scrollable canvas that centers on load
 - Move tool — click and drag to pan around the canvas
+- Rectangle tool — drag to draw a rectangle, with a live preview area while dragging
+- Oval tool — same flow, different shape
+- Hold Space to temporarily switch to the Move tool
 - Canvas and board dimensions tracked reactively (resize-aware)
 
 ---
 
 ## Architecture
 
-The project is built around a custom hook system where each concern is isolated and composable. There are three layers:
+The project is built around a custom hook system where each concern is isolated and composable. There are two layers:
 
 ### Layer 1 — Primitives
 
-**`useMouse(ref)`**
-Tracks raw mouse state on any element. Exposes `isDown`, `startX/Y`, `x/y`, and a `setCursor` function that applies the cursor style directly to the element. Uses a ref internally for `isDown` to avoid stale closures inside event handlers.
+**`useMouse(ref, callback)`**
+The event bridge. Attaches `mousedown`/`mousemove`/`mouseup` listeners on `ref.current` while `callback.active` is true, and delivers each event to the consumer's callbacks. Returns nothing — it's a sink, not a source.
+
+The callback object shape:
+
+```js
+{
+  active,                    // boolean: on / off
+  onDown: (mouse) => {...},  // optional
+  onDrag: (mouse) => {...},  // optional, only fires while isDown
+  onUp:   (mouse) => {...},  // optional
+}
+```
+
+Each callback receives a `mouse` object: `{ isDown, startX, startY, x, y }` (viewport coordinates).
+
+Internally `useMouse` uses two refs — one for the live mouse state, one for the "latest callback" — so handlers always see the current consumer logic without re-attaching DOM listeners on every render.
 
 **`useBoard(boardRef, canvasRef)`**
-Owns everything about the board's state — visible dimensions, full scroll dimensions, and current scroll position. Uses a `ResizeObserver` on both the board and the canvas so `scrollWidth/scrollHeight` stay accurate as content grows. Exposes `scrollTo` and `scrollBy` for tools to use.
+Owns the board's state — visible dimensions, full scroll dimensions, and current scroll position. A `ResizeObserver` on both the board and the canvas keeps `scrollWidth/scrollHeight` accurate as content grows. `scrollTo`/`scrollBy` mutate the DOM; a scroll-event listener mirrors back into state.
+
+**`useArea()`**
+The rubber-band preview rectangle that tools show during a drag.
+
+**`useContent(initial)`**
+The list of committed shapes on the canvas.
 
 ### Layer 2 — Tools
 
-Each tool is its own hook that composes the primitives above. The pattern is always the same:
+Each tool is its own hook that composes the primitives above. Pattern:
 
 ```
-useMouse     → raw mouse data + cursor control
+useMouse     → DOM events delivered to callbacks
 useBoard     → board state + scroll control
 useXxxTool   → wires them together to do one specific thing
 ```
 
-**`useMoveTool(boardRef, scrollTo, active)`**
-Activates when `active` is true. Captures the board's scroll position on mousedown, then offsets it as the mouse moves — creating the grab-and-drag feel. Manages its own cursor states (`grab` → `grabbing`) through `useMouse`.
+**`useMoveTool(boardRef, active, scrollTo)`**
+On mousedown, snapshots the current scroll. On drag, scrolls the board by the inverse of the mouse delta — producing the grab-and-drag feel.
 
-### Adding a new tool
+**`useShapeTool(boardRef, active, shape, enableArea, disableArea, addElement)`**
+Single hook for all rectangle-like shape drawing. On drag, calls `enableArea` to show the preview. On release, commits the shape via `addElement` (translating viewport coords to canvas coords) and hides the preview. The `shape` param ("rectangle" | "oval") is passed straight through to `enableArea`/`addElement`.
 
-Every new tool follows the same structure:
+### Coordinate system
+
+Mouse events deliver **viewport** coordinates (`e.clientX/Y`). The canvas is scrollable, so when a shape is committed the tool adds the board's `scrollLeft/Top` to translate into canvas space. The preview `Area` lives inside the scrollable canvas, so its coords are offset by `boardState.x/y` at render time in `Board.jsx`.
+
+### Tool dispatch
+
+`activeTool` is a single string in `App.jsx`. `Board.jsx` is the dispatcher — it maps the string to a per-tool boolean and passes that to each tool hook:
 
 ```js
-export default function useXxxTool(boardRef, active, /* whatever else it needs */) {
-  const [mouse, onMouseDown, onMouseMove, onMouseUp, setCursor] = useMouse(boardRef);
+useMoveTool(boardRef, activeTool === 'move', scrollTo)
+useShapeTool(boardRef, activeTool === 'rectangle' || activeTool === 'oval', activeTool, ...)
+```
 
-  useEffect(() => {
-    if (!active) return;
-    const board = boardRef.current;
+Each tool always mounts; its `active` flag decides whether it does anything.
 
-    // attach listeners
-    board.addEventListener('mousedown', onMouseDown);
-    board.addEventListener('mousemove', onMouseMove);
-    board.addEventListener('mouseup', onMouseUp);
+---
 
-    return () => {
-      // detach on deactivate
-      board.removeEventListener('mousedown', onMouseDown);
-      board.removeEventListener('mousemove', onMouseMove);
-      board.removeEventListener('mouseup', onMouseUp);
-    };
-  }, [active]);
+## Adding a new tool
 
-  useEffect(() => {
-    // react to mouse state and do something
-  }, [mouse.x, mouse.y]);
+The pattern is short. Write a hook that composes `useMouse` with a callback object:
+
+```js
+import useMouse from './useMouse';
+
+export default function useXxxTool(boardRef, active, /* deps */) {
+  useMouse(boardRef, {
+    active,
+    onDown: (mouse) => { /* snapshot state if needed */ },
+    onDrag: (mouse) => { /* show preview / update something */ },
+    onUp:   (mouse) => { /* commit / cleanup */ },
+  });
 }
 ```
+
+Then in `Board.jsx`, install it with a dispatch condition:
+
+```js
+useXxxTool(boardRef, activeTool === 'xxx', /* deps */)
+```
+
+And in `Toolbar.jsx`, add it to the `tools` array so the user can select it.
 
 ---
 
 ## Tech stack
 
-- React
+- React 19
+- Vite
 - CSS Modules
+- lucide-react (icons)
 
 ---
 
@@ -87,7 +127,10 @@ export default function useXxxTool(boardRef, active, /* whatever else it needs *
 
 ```bash
 npm install
-npm run dev
+npm run dev      # dev server
+npm run build    # production build
+npm run preview  # serve the production build
+npm run lint     # eslint
 ```
 
 ---
@@ -95,9 +138,11 @@ npm run dev
 ## Roadmap
 
 - [ ] Select tool
-- [ ] Rectangle tool
-- [ ] Oval tool
+- [x] Rectangle tool
+- [x] Oval tool
 - [ ] Text tool
 - [ ] Zoom in/out
 - [ ] Element selection and movement
 - [ ] Layers panel
+- [ ] Cursor styling per tool (re-add through `useMouse`'s callback object)
+- [ ] Centralize tool keys into a constants module (`TOOLS.MOVE`, `TOOLS.RECTANGLE`, ...)

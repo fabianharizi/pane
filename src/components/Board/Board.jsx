@@ -2,10 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import styles from './Board.module.css'
 import useBoard from '../../utils/hooks/useBoard';
 import useMoveTool from '../../utils/hooks/useMoveTool';
+import useShapeTool from '../../utils/hooks/useShapeTool';
 import useArea from '../../utils/hooks/useArea';
 import Area from '../Area/Area';
-import useRectangleTool from '../../utils/hooks/useRectangleTool';
-import useOvalTool from '../../utils/hooks/useOvalTool';
 import useContent from '../../utils/hooks/useContent';
 import Shape from '../Shape/Shape';
 
@@ -19,9 +18,19 @@ export default function Board({activeTool, setActiveTool}){
   const [content, addElement, clearContent] = useContent([]);
 
   // Install Tool Hooks
-  useMoveTool(boardRef, scrollTo, activeTool === 'move')
-  useRectangleTool(boardRef, enableArea, disableArea, addElement, activeTool === 'rectangle')
-  useOvalTool(boardRef, enableArea, disableArea, addElement, activeTool === 'oval')
+  useMoveTool(
+    boardRef, 
+    activeTool === 'move', 
+    scrollTo 
+  )
+  useShapeTool(
+    boardRef, 
+    activeTool === 'rectangle' || activeTool === 'oval', 
+    activeTool,
+    enableArea, 
+    disableArea, 
+    addElement
+  )
 
   return (
     <div className={styles.board} ref={boardRef}>
