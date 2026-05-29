@@ -12,6 +12,7 @@ export default function useShapeTool(ref, active, shape, enableArea, disableArea
 
   useMouse(ref, {
     active: active,
+    cursor: "crosshair",
     onDown: (mouse) => {
       boardPos.current = {
         x: ref.current.scrollLeft, 
