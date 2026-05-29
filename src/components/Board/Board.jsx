@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import styles from './Board.module.css'
 import useBoard from '../../utils/hooks/useBoard';
-import useMoveTool from '../../utils/hooks/useMoveTool';
-import useShapeTool from '../../utils/hooks/useShapeTool';
+import useMoveTool from '../../utils/tools/useMoveTool';
+import useShapeTool from '../../utils/tools/useShapeTool';
 import useArea from '../../utils/hooks/useArea';
 import Area from '../Area/Area';
 import useContent from '../../utils/hooks/useContent';

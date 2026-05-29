@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import useMouse from './useMouse';
+import useMouse from '../hooks/useMouse';
 
 // This hook is used to implement the "Shape" tool. 
 // It needs a condition to be active

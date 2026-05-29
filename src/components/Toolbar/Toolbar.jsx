@@ -1,6 +1,6 @@
 import styles from './Toolbar.module.css'
 import { useEffect } from 'react';
-import toolset from '../../utils/toolset.js'
+import toolset from '../../utils/tools/toolset.js'
 
 export default function Toolbar({activeTool, setActiveTool}){
     useEffect(() => {
