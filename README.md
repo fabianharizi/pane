@@ -17,6 +17,7 @@ Early development. Core canvas, tool dispatch system, and a callback-based hook 
 - Rectangle tool — drag to draw a rectangle, with a live preview area while dragging
 - Oval tool — same flow, different shape
 - Hold Space to temporarily switch to the Move tool
+- Per-tool cursors (e.g. Move shows `grab` / `grabbing`, shape tools show `crosshair`)
 - Canvas and board dimensions tracked reactively (resize-aware)
 
 ---
@@ -34,14 +35,15 @@ The callback object shape:
 
 ```js
 {
-  active,                    // boolean: on / off
-  onDown: (mouse) => {...},  // optional
-  onDrag: (mouse) => {...},  // optional, only fires while isDown
-  onUp:   (mouse) => {...},  // optional
+  active,                              // boolean: on / off
+  cursor,                             // optional base cursor, applied while active
+  onDown: (mouse, setCursor) => {...}, // optional
+  onDrag: (mouse, setCursor) => {...}, // optional, only fires while isDown
+  onUp:   (mouse, setCursor) => {...}, // optional
 }
 ```
 
-Each callback receives a `mouse` object: `{ isDown, startX, startY, x, y }` (viewport coordinates).
+Each callback receives a `mouse` object — `{ isDown, startX, startY, x, y }` (viewport coordinates) — and a `setCursor(type?)` helper. `setCursor('grabbing')` overrides the cursor mid-gesture; `setCursor()` with no argument resets it to the tool's base `cursor`. The base cursor is applied on activate and reset to `default` on deactivate.
 
 Internally `useMouse` uses two refs — one for the live mouse state, one for the "latest callback" — so handlers always see the current consumer logic without re-attaching DOM listeners on every render.
 
@@ -65,7 +67,7 @@ useXxxTool   → wires them together to do one specific thing
 ```
 
 **`useMoveTool(boardRef, active, scrollTo)`**
-On mousedown, snapshots the current scroll. On drag, scrolls the board by the inverse of the mouse delta — producing the grab-and-drag feel.
+On mousedown, snapshots the current scroll and flips the cursor to `grabbing`. On drag, scrolls the board by the inverse of the mouse delta — producing the grab-and-drag feel. On release, resets the cursor to its `grab` base.
 
 **`useShapeTool(boardRef, active, shape, enableArea, disableArea, addElement)`**
 Single hook for all rectangle-like shape drawing. On drag, calls `enableArea` to show the preview. On release, commits the shape via `addElement` (translating viewport coords to canvas coords) and hides the preview. The `shape` param ("rectangle" | "oval") is passed straight through to `enableArea`/`addElement`.
@@ -97,9 +99,10 @@ import useMouse from './useMouse';
 export default function useXxxTool(boardRef, active, /* deps */) {
   useMouse(boardRef, {
     active,
-    onDown: (mouse) => { /* snapshot state if needed */ },
-    onDrag: (mouse) => { /* show preview / update something */ },
-    onUp:   (mouse) => { /* commit / cleanup */ },
+    cursor: 'crosshair',                       // optional base cursor
+    onDown: (mouse, setCursor) => { /* snapshot state if needed */ },
+    onDrag: (mouse, setCursor) => { /* show preview / update something */ },
+    onUp:   (mouse, setCursor) => { /* commit / cleanup */ },
   });
 }
 ```
@@ -144,5 +147,5 @@ npm run lint     # eslint
 - [ ] Zoom in/out
 - [ ] Element selection and movement
 - [ ] Layers panel
-- [ ] Cursor styling per tool (re-add through `useMouse`'s callback object)
+- [x] Cursor styling per tool (via `useMouse`'s callback object + `setCursor`)
 - [ ] Centralize tool keys into a constants module (`TOOLS.MOVE`, `TOOLS.RECTANGLE`, ...)

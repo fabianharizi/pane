@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect } from "react";
 
 // This hook wires mousedown/move/up listeners on ref.current and delivers them to the consumer's callbacks while active is true. Reset on deactivation.
 
@@ -12,7 +12,6 @@ import { useRef, useEffect, useState } from "react";
 export default function useMouse(ref, callback) {
   const mouse = useRef({
     isDown: false,
-    cursor: "default",
     startX: 0,
     startY: 0,
     x: 0,
@@ -21,6 +20,10 @@ export default function useMouse(ref, callback) {
 
   const latestCallback = useRef(callback);
   useEffect(() => { latestCallback.current = callback; }); 
+
+  // Cursor type handling
+
+  const setCursor = (type) => {ref.current.style.cursor = type ?? latestCallback.current.cursor ?? 'default'}
 
   // Gets starting position when mouse is down
   const handleMouseDown = (e) => {
@@ -61,7 +64,7 @@ export default function useMouse(ref, callback) {
 
     const board = ref.current;
 
-    board.style.cursor = latestCallback.current.cursor;
+    setCursor();
 
     board.addEventListener('mousedown', handleMouseDown);
     board.addEventListener('mousemove', handleMouseDrag);
@@ -69,21 +72,11 @@ export default function useMouse(ref, callback) {
 
     return () => {
       mouse.current.isDown = false;
+      board.style.cursor = 'default';
       board.removeEventListener('mousedown', handleMouseDown);
       board.removeEventListener('mousemove', handleMouseDrag);
       board.removeEventListener('mouseup', handleMouseUp);
     };
 
   }, [callback.active])
-
-  
-  // Cursor type handling
-
-  const [cursorType, setCursorType] = useState(mouse.current.cursor)
-  const setCursor = (type) => (type ? setCursorType(type) : setCursorType(latestCallback.current.cursor))
-
-  useEffect(() => {
-    const board = ref.current;
-    board.style.cursor = cursorType;
-  }, [cursorType])
 }

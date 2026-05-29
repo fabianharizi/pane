@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import useMouse from './useMouse';
 
 // This hook is used to implement the "Shape" tool. 
