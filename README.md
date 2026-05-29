@@ -1,6 +1,6 @@
 # Sketch Whiteboard
 
-A web-based interactive whiteboard built from scratch in React. The goal is to replicate the core feel of tools like Figma — an infinite scrollable canvas where you can draw and manipulate shapes using a toolbar of tools.
+A web-based interactive whiteboard built from scratch in React — an infinite scrollable canvas where you can draw and manipulate shapes using a toolbar of tools.
 
 ---
 
