@@ -1,22 +1,20 @@
+import { useEffect } from "react"
 import styles from "./Line.module.css"
 
 export default function Line(props){
-  const shapeProps = {
-    x: Math.min(props.startX, props.x),
-    y: Math.min(props.startY, props.y),
-    width: Math.abs(props.x - props.startX),
-    height: Math.abs(props.y - props.startY),
+  const lineProps = {
+    x: props.startX,
+    y: props.startY,
+    length: Math.hypot(props.x - props.startX, props.y - props.startY),
+    angle: Math.atan2(props.y - props.startY, props.x - props.startX)
   }
+
   return(
-    <div className={
-      styles.shape + " " +(
-      (props.type == "rectangle") ? styles.rectangle : 
-      (props.type == "oval") ? styles.oval : ""
-    )} style={{
-      "--x": shapeProps.x + "px",
-      "--y": shapeProps.y + "px",
-      "--width": shapeProps.width + "px",
-      "--height": shapeProps.height + "px"
+    <div className={styles.line} style={{
+      "--x": lineProps.x + "px",
+      "--y": lineProps.y + "px",
+      "--length": lineProps.length + "px",
+      "--angle": lineProps.angle + "rad"
     }}></div>
   )
 }

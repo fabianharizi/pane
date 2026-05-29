@@ -1,0 +1,10 @@
+.line{
+  position: absolute;
+  top: var(--y);
+  left: var(--x);
+  width: var(--length);
+  height: 2px;
+  background-color: #fff;
+  transform-origin: 0 50%;
+  rotate: var(--angle);
+}

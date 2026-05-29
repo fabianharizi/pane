@@ -1,4 +1,4 @@
-import { Circle, Hand, MousePointer2, Square } from "lucide-react";
+import { Circle, Hand, MousePointer2, Slash, Square } from "lucide-react";
 
 const toolset = [
   [
@@ -7,7 +7,8 @@ const toolset = [
   ],
   [
     { id: "rectangle", icon: Square },
-    { id: "oval", icon: Circle }
+    { id: "oval", icon: Circle },
+    { id: "line", icon: Slash }
   ]
 ]
 
