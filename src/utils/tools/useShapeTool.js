@@ -4,7 +4,7 @@ import useMouse from '../hooks/useMouse';
 // This hook is used to implement the "Shape" tool. 
 // It needs a condition to be active
 
-export default function useShapeTool(ref, active, shape, enableArea, disableArea, addElement) {
+export default function useShapeTool(ref, active, shape, enablePreview, disablePreview, addElement) {
   const boardPos = useRef({
     x: 0, 
     y: 0
@@ -20,7 +20,7 @@ export default function useShapeTool(ref, active, shape, enableArea, disableArea
       }
     },
     onDrag: (mouse) => {
-      enableArea(mouse.startX, mouse.startY, mouse.x, mouse.y, shape)
+      enablePreview(mouse.startX, mouse.startY, mouse.x, mouse.y, shape)
     },
     onUp: (mouse) => {
       addElement(
@@ -30,7 +30,7 @@ export default function useShapeTool(ref, active, shape, enableArea, disableArea
         mouse.x + boardPos.current.x, 
         mouse.y + boardPos.current.y
       )
-      disableArea()
+      disablePreview()
     }
   })
 }

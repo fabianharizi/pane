@@ -1,6 +1,6 @@
-import styles from "./Area.module.css"
+import styles from "./Preview.module.css"
 
-export default function Area(props){
+export default function Preview(props){
   const areaProps = {
     x: Math.min(props.startX, props.x),
     y: Math.min(props.startY, props.y),

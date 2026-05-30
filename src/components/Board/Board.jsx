@@ -4,8 +4,8 @@ import useBoard from '../../utils/hooks/useBoard';
 import useMoveTool from '../../utils/tools/useMoveTool';
 import useShapeTool from '../../utils/tools/useShapeTool';
 import useLineTool from '../../utils/tools/useLineTool';
-import useArea from '../../utils/hooks/useArea';
-import Area from '../Area/Area';
+import usePreview from '../../utils/hooks/usePreview';
+import Preview from '../Preview/Preview';
 import useContent from '../../utils/hooks/useContent';
 import Shape from '../Shape/Shape';
 import Line from '../Line/Line';
@@ -15,7 +15,7 @@ export default function Board({activeTool, setActiveTool}){
   const canvasRef = useRef(null);
 
   const [boardState, scrollTo, scrollBy] = useBoard(boardRef, canvasRef);
-  const [area, enableArea, disableArea] = useArea();
+  const [preview, enablePreview, disablePreview] = usePreview();
 
   const [content, addElement, clearContent] = useContent([]);
 
@@ -29,27 +29,27 @@ export default function Board({activeTool, setActiveTool}){
     boardRef, 
     activeTool === 'rectangle' || activeTool === 'oval', 
     activeTool,
-    enableArea, 
-    disableArea, 
+    enablePreview, 
+    disablePreview, 
     addElement
   )
   useLineTool(
     boardRef, 
     activeTool === 'line', 
-    enableArea, 
-    disableArea, 
+    enablePreview, 
+    disablePreview, 
     addElement
   )
 
   return (
     <div className={styles.board} ref={boardRef}>
       <div className={styles.canvas} ref={canvasRef}>
-        {area.isVisible && <Area 
-          mode={area.mode}
-          startX={area.startX + boardState.x}
-          startY={area.startY + boardState.y}
-          x={area.x + boardState.x}
-          y={area.y + boardState.y}
+        {preview.isVisible && <Preview 
+          mode={preview.mode}
+          startX={preview.startX + boardState.x}
+          startY={preview.startY + boardState.y}
+          x={preview.x + boardState.x}
+          y={preview.y + boardState.y}
         />}
 
         {content.map(el => {

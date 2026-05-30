@@ -4,7 +4,7 @@ import useMouse from '../hooks/useMouse';
 // This hook is used to implement the "Line" tool. 
 // It needs a condition to be active
 
-export default function useLineTool(ref, active, enableArea, disableArea, addElement) {
+export default function useLineTool(ref, active, enablePreview, disablePreview, addElement) {
   const boardPos = useRef({
     x: 0, 
     y: 0
@@ -20,7 +20,7 @@ export default function useLineTool(ref, active, enableArea, disableArea, addEle
       }
     },
     onDrag: (mouse) => {
-      enableArea(mouse.startX, mouse.startY, mouse.x, mouse.y, "line")
+      enablePreview(mouse.startX, mouse.startY, mouse.x, mouse.y, "line")
     },
     onUp: (mouse) => {
       addElement(
@@ -30,7 +30,7 @@ export default function useLineTool(ref, active, enableArea, disableArea, addEle
         mouse.x + boardPos.current.x, 
         mouse.y + boardPos.current.y
       )
-      disableArea()
+      disablePreview()
     }
   })
 }
