@@ -5,7 +5,6 @@ import useMoveTool from '../../utils/tools/useMoveTool';
 import useShapeTool from '../../utils/tools/useShapeTool';
 import useLineTool from '../../utils/tools/useLineTool';
 import usePreview from '../../utils/hooks/usePreview';
-import Preview from '../Preview/Preview';
 import useContent from '../../utils/hooks/useContent';
 import Shape from '../Shape/Shape';
 import Line from '../Line/Line';
@@ -17,7 +16,7 @@ export default function Board({activeTool, setActiveTool}){
   const [boardState, scrollTo, scrollBy] = useBoard(boardRef, canvasRef);
   const [preview, enablePreview, disablePreview] = usePreview();
 
-  const [content, addElement, clearContent] = useContent([]);
+  const [content, addElement, clearContent, encodeContent] = useContent([]);
 
   // Install Tool Hooks
   useMoveTool(
@@ -52,27 +51,7 @@ export default function Board({activeTool, setActiveTool}){
           y={preview.y + boardState.y}
         />}
 
-        {content.map(el => {
-          switch(el.type){
-            case "rectangle":
-            case "oval":
-              return <Shape 
-                type={el.type}
-                startX={el.startX}
-                startY={el.startY}
-                x={el.x}
-                y={el.y}
-              />
-
-            case "line":
-              return <Line
-                startX={el.startX}
-                startY={el.startY}
-                x={el.x}
-                y={el.y}
-              />
-          }
-        })}
+        {encodeContent()}
       </div>
     </div> 
   )

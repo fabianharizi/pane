@@ -19,5 +19,31 @@ export default function useContent(start){
     setContent([])
   }
 
-  return [content, addElement, clearContent];
+  const encodeContent = (content) => {
+    let c = content ? content : this.content
+    
+    return c.map(el => {
+      switch(el.type){
+        case "rectangle":
+        case "oval":
+          return <Shape 
+            type={el.type}
+            startX={el.startX}
+            startY={el.startY}
+            x={el.x}
+            y={el.y}
+          />
+  
+        case "line":
+          return <Line
+            startX={el.startX}
+            startY={el.startY}
+            x={el.x}
+            y={el.y}
+          />
+      }
+    })
+  }
+
+  return [content, addElement, clearContent, encodeContent];
 }
