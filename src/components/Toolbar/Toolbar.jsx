@@ -28,4 +28,4 @@ export default function Toolbar({activeTool, setActiveTool}){
       </div>)}
     </div>
   )
-}
+} 

@@ -1,19 +1,21 @@
 import { useState } from "react";
 import Shape from '../../components/Shape/Shape';
 import Line from '../../components/Line/Line';
+import Text from "../../components/Text/Text";
 
 // This hook is used to keep track of the contents of the canvas
 
 export default function useContent(start){
   const [content, setContent] = useState(start)
 
-  const addElement = (type, startX, startY, x, y) => {
+  const addElement = (type, startX, startY, x, y, props) => {
     setContent(prev => ([...prev, {
       type: type,
       startX: startX,
       startY: startY,
       x: x,
-      y: y
+      y: y,
+      ...props
     }]))
   }
 
@@ -42,6 +44,15 @@ export default function useContent(start){
             startY={el.startY + centerY}
             x={el.x + centerX}
             y={el.y + centerY}
+          />
+  
+        case "text":
+          return <Text
+            startX={el.startX + centerX}
+            startY={el.startY + centerY}
+            x={el.x + centerX}
+            y={el.y + centerY}
+            content={el.content}
           />
       }
     })

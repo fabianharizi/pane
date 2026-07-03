@@ -8,6 +8,8 @@ import usePreview from '../../utils/hooks/usePreview';
 import useContent from '../../utils/hooks/useContent';
 import Shape from '../Shape/Shape';
 import Line from '../Line/Line';
+import Text from '../Text/Text';
+import useTextTool from '../../utils/tools/useTextTool';
 
 export default function Board({activeTool, setActiveTool}){
   const boardRef = useRef(null);
@@ -16,7 +18,7 @@ export default function Board({activeTool, setActiveTool}){
   const [boardState, scrollTo, scrollBy, setSize] = useBoard(boardRef, canvasRef);
   const [preview, enablePreview, disablePreview] = usePreview();
 
-  const [content, addElement, clearContent, encodeContent] = useContent([]);
+  const [content, addElement, clearContent, encodeContent] = useContent([]); 
 
   // Install Tool Hooks
   useMoveTool(
@@ -38,6 +40,13 @@ export default function Board({activeTool, setActiveTool}){
     enablePreview, 
     disablePreview, 
     addElement
+  )
+  useTextTool(
+    boardRef, 
+    activeTool === 'text',
+    enablePreview, 
+    disablePreview, 
+    addElement,
   )
 
 

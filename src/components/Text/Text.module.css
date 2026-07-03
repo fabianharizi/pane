@@ -1,0 +1,13 @@
+.text{
+  position: absolute;
+  top: var(--y);
+  left: var(--x);
+  width: var(--width);
+  height: var(--height);
+  color: #fff;
+  cursor: pointer;
+}
+
+.text:focus{
+  cursor: text;
+}

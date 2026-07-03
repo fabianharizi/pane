@@ -1,4 +1,4 @@
-import { Circle, Hand, MousePointer2, Slash, Square } from "lucide-react";
+import { Circle, Hand, LetterText, MousePointer2, Slash, Square, Text, TypeIcon } from "lucide-react";
 
 // shortcut: sticky key press that switches to the tool and stays.
 // momentary: key that activates the tool only while held, restoring the
@@ -12,7 +12,8 @@ const toolset = [
   [
     { id: "rectangle", icon: Square, shortcut: "r" },
     { id: "oval", icon: Circle, shortcut: "o" },
-    { id: "line", icon: Slash, shortcut: "l" }
+    { id: "line", icon: Slash, shortcut: "l" },
+    { id: "text", icon: TypeIcon, shortcut: "t" },
   ]
 ]
 
