@@ -1,4 +1,6 @@
 import { useState } from "react";
+import Shape from '../../components/Shape/Shape';
+import Line from '../../components/Line/Line';
 
 // This hook is used to keep track of the contents of the canvas
 
@@ -19,7 +21,7 @@ export default function useContent(start){
     setContent([])
   }
 
-  const encodeContent = (content) => {
+  const encodeContent = (content, centerX, centerY) => {
     let c = content ? content : this.content
     
     return c.map(el => {
@@ -28,18 +30,18 @@ export default function useContent(start){
         case "oval":
           return <Shape 
             type={el.type}
-            startX={el.startX}
-            startY={el.startY}
-            x={el.x}
-            y={el.y}
+            startX={el.startX + centerX}
+            startY={el.startY + centerY}
+            x={el.x + centerX}
+            y={el.y + centerY}
           />
   
         case "line":
           return <Line
-            startX={el.startX}
-            startY={el.startY}
-            x={el.x}
-            y={el.y}
+            startX={el.startX + centerX}
+            startY={el.startY + centerY}
+            x={el.x + centerX}
+            y={el.y + centerY}
           />
       }
     })

@@ -10,6 +10,7 @@ export default function useBoard(boardRef, canvasRef) {
     scrollHeight: 0,
     x: 0,
     y: 0,
+    canvasSize: 5000
   });
 
   // Scroll board to the center and track scroll when moved manually
@@ -78,5 +79,15 @@ export default function useBoard(boardRef, canvasRef) {
     boardRef.current.scrollBy({ left: x, top: y });
   };
 
-  return [boardState, scrollTo, scrollBy];
+  const setSize = (content) => {
+    if (content.length === 0) return
+    const radius = Math.max(
+      ...content.map(el =>
+        Math.max(Math.abs(el.startX), Math.abs(el.x), Math.abs(el.startY), Math.abs(el.y))
+      )
+    )
+    setBoardState(prev => ({ ...prev, canvasSize: 5000 + radius * 2 }))
+  }
+
+  return [boardState, scrollTo, scrollBy, setSize];
 }
