@@ -4,7 +4,7 @@ import useMouse from '../hooks/useMouse';
 // This hook is used to implement the "Shape" tool. 
 // It needs a condition to be active
 
-export default function useTextTool(ref, active, enablePreview, disablePreview, addElement) {
+export default function useTextTool(ref, active, enablePreview, disablePreview, addElement, setActiveTool) {
   const boardPos = useRef({
     x: 0, 
     y: 0,
@@ -44,6 +44,7 @@ export default function useTextTool(ref, active, enablePreview, disablePreview, 
         }
       )
       disablePreview()
+      setActiveTool("select")
     }
   })
 }

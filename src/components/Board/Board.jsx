@@ -47,6 +47,7 @@ export default function Board({activeTool, setActiveTool}){
     enablePreview, 
     disablePreview, 
     addElement,
+    setActiveTool
   )
 
 
