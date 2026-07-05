@@ -16,6 +16,7 @@ export default function useMouse(ref, callback) {
     startY: 0,
     x: 0,
     y: 0,
+    hasDragged: false
   });
 
   const latestCallback = useRef(callback);
@@ -35,20 +36,7 @@ export default function useMouse(ref, callback) {
         startY: e.clientY,
         x: e.clientX,
         y: e.clientY,
-    }, setCursor);
-  };
-
-  // Gets starting position when mouse is clicked
-  const handleMouseClick = (e) => {
-    if (latestCallback.current.active) latestCallback.current.onClick?.(
-      mouse.current = {
-        ...mouse.current,
-        isDown: true,
-        startX: e.clientX,
-        startY: e.clientY,
-        x: e.clientX,
-        y: e.clientY,
-        target: e
+        hasDragged = false
     }, setCursor);
   };
 
@@ -60,7 +48,8 @@ export default function useMouse(ref, callback) {
       mouse.current = { 
         ...mouse.current,
         x: e.clientX, 
-        y: e.clientY 
+        y: e.clientY,
+        hasDragged = true,
     }, setCursor)
   };
 
@@ -73,6 +62,21 @@ export default function useMouse(ref, callback) {
     }, setCursor)
   };
 
+  // Gets starting position when mouse is clicked
+  const handleMouseClick = (e) => {
+    if (mouse.current.hasDragged) return;
+    if (latestCallback.current.active) latestCallback.current.onClick?.(
+      mouse.current = {
+        ...mouse.current,
+        isDown: true,
+        startX: e.clientX,
+        startY: e.clientY,
+        x: e.clientX,
+        y: e.clientY,
+        target: e
+    }, setCursor);
+  };
+
   useEffect(() => {
     if (!latestCallback.current.active) return;
 
@@ -81,17 +85,17 @@ export default function useMouse(ref, callback) {
     setCursor();
 
     board.addEventListener('mousedown', handleMouseDown);
-    board.addEventListener('click', handleMouseClick);
     board.addEventListener('mousemove', handleMouseDrag);
     board.addEventListener('mouseup', handleMouseUp);
+    board.addEventListener('click', handleMouseClick);
 
     return () => {
       mouse.current.isDown = false;
       board.style.cursor = 'default';
       board.removeEventListener('mousedown', handleMouseDown);
-      board.removeEventListener('click', handleMouseClick);
       board.removeEventListener('mousemove', handleMouseDrag);
       board.removeEventListener('mouseup', handleMouseUp);
+      board.removeEventListener('click', handleMouseClick);
     };
 
   }, [callback.active])
