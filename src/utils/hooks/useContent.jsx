@@ -8,9 +8,10 @@ import Text from "../../components/Text/Text";
 export default function useContent(start){
   const [content, setContent] = useState(start)
 
-  const addElement = (type, startX, startY, x, y, props) => {
+  const addElement = (type, uuid, startX, startY, x, y, props) => {
     setContent(prev => ([...prev, {
       type: type,
+      uuid: uuid,
       startX: startX,
       startY: startY,
       x: x,
@@ -31,6 +32,8 @@ export default function useContent(start){
         case "rectangle":
         case "oval":
           return <Shape 
+            key={el.uuid}
+            uuid={el.uuid}
             type={el.type}
             startX={el.startX + centerX}
             startY={el.startY + centerY}
@@ -40,6 +43,8 @@ export default function useContent(start){
   
         case "line":
           return <Line
+            key={el.uuid}
+            uuid={el.uuid}
             startX={el.startX + centerX}
             startY={el.startY + centerY}
             x={el.x + centerX}
@@ -48,6 +53,8 @@ export default function useContent(start){
   
         case "text":
           return <Text
+            key={el.uuid}
+            uuid={el.uuid}
             startX={el.startX + centerX}
             startY={el.startY + centerY}
             x={el.x + centerX}

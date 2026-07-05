@@ -27,51 +27,50 @@ export default function useMouse(ref, callback) {
 
   // Gets starting position when mouse is down
   const handleMouseDown = (e) => {
-    mouse.current = {
-      ...mouse.current,
-      isDown: true,
-      startX: e.clientX,
-      startY: e.clientY,
-      x: e.clientX,
-      y: e.clientY,
-    }
-
-    if (latestCallback.current.active) latestCallback.current.onDown?.(mouse.current, setCursor);
+    if (latestCallback.current.active) latestCallback.current.onDown?.(
+      mouse.current = {
+        ...mouse.current,
+        isDown: true,
+        startX: e.clientX,
+        startY: e.clientY,
+        x: e.clientX,
+        y: e.clientY,
+    }, setCursor);
   };
 
   // Gets starting position when mouse is clicked
   const handleMouseClick = (e) => {
-    mouse.current = {
-      ...mouse.current,
-      isDown: true,
-      startX: e.clientX,
-      startY: e.clientY,
-      x: e.clientX,
-      y: e.clientY,
-      target: e.target
-    }
-
-    if (latestCallback.current.active) latestCallback.current.onClick?.(mouse.current, setCursor);
+    if (latestCallback.current.active) latestCallback.current.onClick?.(
+      mouse.current = {
+        ...mouse.current,
+        isDown: true,
+        startX: e.clientX,
+        startY: e.clientY,
+        x: e.clientX,
+        y: e.clientY,
+        target: e
+    }, setCursor);
   };
 
   // Gets current position when mouse is moving
   const handleMouseDrag = (e) => {
     if (!mouse.current.isDown) return;
-    mouse.current = { 
-      ...mouse.current,
-      x: e.clientX, 
-      y: e.clientY 
-    }
-    if (latestCallback.current.active) latestCallback.current.onDrag?.(mouse.current, setCursor)
+
+    if (latestCallback.current.active) latestCallback.current.onDrag?.(
+      mouse.current = { 
+        ...mouse.current,
+        x: e.clientX, 
+        y: e.clientY 
+    }, setCursor)
   };
 
   // Sets isDown to false when mouse is up
   const handleMouseUp = () => {
-    mouse.current = { 
-      ...mouse.current,
-      isDown: false 
-    }
-    if (latestCallback.current.active) latestCallback.current.onUp?.(mouse.current, setCursor)
+    if (latestCallback.current.active) latestCallback.current.onUp?.(
+      mouse.current = { 
+        ...mouse.current,
+        isDown: false 
+    }, setCursor)
   };
 
   useEffect(() => {

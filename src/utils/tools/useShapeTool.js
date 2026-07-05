@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import useMouse from '../hooks/useMouse';
+import generateUUID from '../methods/generateUUID'
 
 // This hook is used to implement the "Shape" tool. 
 // It needs a condition to be active
@@ -35,6 +36,7 @@ export default function useShapeTool(ref, active, shape, enablePreview, disableP
     onUp: (mouse) => {
       addElement(
         shape, 
+        generateUUID(shape.slice(0, 4)),
         mouse.startX + boardPos.current.x - boardPos.current.centerX, 
         mouse.startY + boardPos.current.y - boardPos.current.centerY, 
         mouse.x + boardPos.current.x - boardPos.current.centerX, 

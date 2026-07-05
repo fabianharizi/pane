@@ -9,7 +9,7 @@ export default function Text(props){
   }
 
   return(
-      <div contentEditable="true" className={styles.text} style={{
+      <div contentEditable="true" className={styles.text} data-uuid={props.uuid} style={{
         "--x": shapeProps.x + "px",
         "--y": shapeProps.y + "px",
         "--width": (shapeProps.width > 10) ? shapeProps.width + "px" : "min-content",

@@ -35,6 +35,7 @@ export default function useLineTool(ref, active, enablePreview, disablePreview, 
     onUp: (mouse) => {
       addElement(
         "line", 
+        generateUUID("line"),
         mouse.startX + boardPos.current.x - boardPos.current.centerX, 
         mouse.startY + boardPos.current.y - boardPos.current.centerY, 
         mouse.x + boardPos.current.x - boardPos.current.centerX, 

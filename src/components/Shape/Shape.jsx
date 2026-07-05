@@ -12,7 +12,7 @@ export default function Shape(props){
       styles.shape + " " +(
       (props.type == "rectangle") ? styles.rectangle : 
       (props.type == "oval") ? styles.oval : ""
-    )} style={{
+    )} data-uuid={props.uuid} style={{
       "--x": shapeProps.x + "px",
       "--y": shapeProps.y + "px",
       "--width": shapeProps.width + "px",
