@@ -1,75 +1,22 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import styles from './Board.module.css'
-import useBoard from '../../utils/hooks/useBoard';
-import useMoveTool from '../../utils/tools/useMoveTool';
-import useShapeTool from '../../utils/tools/useShapeTool';
-import useLineTool from '../../utils/tools/useLineTool';
-import usePreview from '../../utils/hooks/usePreview';
-import useContent from '../../utils/hooks/useContent';
-import Shape from '../Shape/Shape';
-import Line from '../Line/Line';
-import Text from '../Text/Text';
-import useTextTool from '../../utils/tools/useTextTool';
-import useSelectTool from '../../utils/tools/useSelectTool';
+import useContent from '../../utils/hooks/useContent'
 
-export default function Board({activeTool, setActiveTool}){
-  const boardRef = useRef(null);
-  const canvasRef = useRef(null);
+export default function Board({
+    // Refs
+    boardRef,
+    canvasRef,
+    
+    // Content
+    content,
 
-  const [boardState, scrollTo, scrollBy, setSize] = useBoard(boardRef, canvasRef);
-  const [preview, enablePreview, disablePreview] = usePreview();
+    // Board State
+    boardState,
 
-  const {content, addElement, selectElement, clearContent, encodeContent} = useContent([]); 
+    // Preview
+    preview
+  }){
 
-  // Install Tool Hooks
-  useSelectTool(
-    boardRef, 
-    activeTool === 'select', 
-    selectElement
-  )
-  useMoveTool(
-    boardRef, 
-    activeTool === 'move', 
-    scrollTo 
-  )
-  useShapeTool(
-    boardRef, 
-    activeTool === 'rectangle' || activeTool === 'oval', 
-    activeTool,
-    enablePreview, 
-    disablePreview, 
-    addElement,
-  )
-  useLineTool(
-    boardRef, 
-    activeTool === 'line', 
-    enablePreview, 
-    disablePreview, 
-    addElement
-  )
-  useTextTool(
-    boardRef, 
-    activeTool === 'text',
-    enablePreview, 
-    disablePreview, 
-    addElement,
-    setActiveTool
-  )
-
-
-  useEffect(() => {
-    setSize(content)
-  }, [content])
-
-  const prevSize = useRef(boardState.canvasSize);
-
-  useLayoutEffect(() => {
-    const delta = boardState.canvasSize - prevSize.current;
-    if (delta !== 0) {
-      boardRef.current.scrollBy({ left: delta / 2, top: delta / 2 });
-      prevSize.current = boardState.canvasSize;
-    }
-  }, [boardState.canvasSize]);
+  const { encodeContent } = useContent([])
 
   return (
     <div className={styles.board} ref={boardRef}>

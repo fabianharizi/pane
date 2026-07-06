@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useLayoutEffect } from "react";
 
 // This hook is used to get and update board's info such as scroll position, size and coordinates
 
-export default function useBoard(boardRef, canvasRef) {
+export default function useBoard(boardRef, canvasRef, content) {
   const [boardState, setBoardState] = useState({
     width: 0,
     height: 0,
@@ -79,7 +79,7 @@ export default function useBoard(boardRef, canvasRef) {
     boardRef.current.scrollBy({ left: x, top: y });
   };
 
-  const setSize = (content) => {
+  useEffect(() => {
     if (content.length === 0) return
     const radius = Math.max(
       ...content.map(el =>
@@ -87,7 +87,17 @@ export default function useBoard(boardRef, canvasRef) {
       )
     )
     setBoardState(prev => ({ ...prev, canvasSize: 5000 + radius * 2 }))
-  }
+  }, [content])
 
-  return [boardState, scrollTo, scrollBy, setSize];
+  const prevSize = useRef(boardState.canvasSize);
+
+  useLayoutEffect(() => {
+    const delta = boardState.canvasSize - prevSize.current;
+    if (delta !== 0) {
+      boardRef.current.scrollBy({ left: delta / 2, top: delta / 2 });
+      prevSize.current = boardState.canvasSize;
+    }
+  }, [boardState.canvasSize]);
+
+  return [boardState, scrollTo, scrollBy];
 }
