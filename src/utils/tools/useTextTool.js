@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import useMouse from '../hooks/useMouse';
-import generateUUID from '../methods/generateUUID'
+import UUID from '../methods/UUID'
 
 // This hook is used to implement the "Shape" tool. 
 // It needs a condition to be active
@@ -38,7 +38,7 @@ export default function useTextTool(ref, active, enablePreview, disablePreview, 
     onUp: (mouse) => {
       addElement(
         "text", 
-        generateUUID("text"),
+        UUID.generate("text"),
         mouse.startX + boardPos.current.x - boardPos.current.centerX, 
         mouse.startY + boardPos.current.y - boardPos.current.centerY, 
         (mouse.hasDragged) ? mouse.x + boardPos.current.x - boardPos.current.centerX 

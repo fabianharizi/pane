@@ -47,7 +47,8 @@ export default function useMouse(ref, callback) {
         ...mouse.current,
         x: e.clientX, 
         y: e.clientY,
-        hasDragged: mouse.current.isDown ? true : false
+        hasDragged: mouse.current.isDown ? true : false,
+        target: e.target
     }, setCursor)
   };
 

@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import Shape from '../../components/Shape/Shape';
 import Line from '../../components/Line/Line';
 import Text from "../../components/Text/Text";
+import UUID from "../methods/UUID";
 
 // This hook is used to keep track of the contents of the canvas
 
@@ -24,7 +25,7 @@ export default function useContent(start){
   const selectElement = (uuid) => {
     setContent(prev => prev.map((el) => ({
       ...el,
-      selected: (el.uuid == uuid) ? true : false
+      selected: (UUID.validate(uuid) && el.uuid == uuid) ? true : false
     })))
   }
 

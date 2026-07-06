@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import useMouse from '../hooks/useMouse';
-import generateUUID from '../methods/generateUUID'
+import UUID from '../methods/UUID'
 
 // This hook is used to implement the "Line" tool. 
 // It needs a condition to be active
@@ -38,7 +38,7 @@ export default function useLineTool(ref, active, enablePreview, disablePreview, 
     onUp: (mouse) => {
       addElement(
         "line", 
-        generateUUID("line"),
+        UUID.generate("line"),
         mouse.startX + boardPos.current.x - boardPos.current.centerX, 
         mouse.startY + boardPos.current.y - boardPos.current.centerY, 
         (mouse.hasDragged) ? mouse.x + boardPos.current.x - boardPos.current.centerX 
