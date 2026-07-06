@@ -39,8 +39,10 @@ export default function useShapeTool(ref, active, shape, enablePreview, disableP
         generateUUID(shape.slice(0, 4)),
         mouse.startX + boardPos.current.x - boardPos.current.centerX, 
         mouse.startY + boardPos.current.y - boardPos.current.centerY, 
-        mouse.x + boardPos.current.x - boardPos.current.centerX, 
-        mouse.y + boardPos.current.y - boardPos.current.centerY
+        (mouse.hasDragged) ? mouse.x + boardPos.current.x - boardPos.current.centerX 
+                           : mouse.startX + boardPos.current.x - boardPos.current.centerX + 100, 
+        (mouse.hasDragged) ? mouse.y + boardPos.current.y - boardPos.current.centerY 
+                           : mouse.startY + boardPos.current.y - boardPos.current.centerY + 100,
       )
       disablePreview()
     }

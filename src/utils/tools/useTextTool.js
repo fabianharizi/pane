@@ -39,8 +39,10 @@ export default function useTextTool(ref, active, enablePreview, disablePreview, 
         generateUUID("text"),
         mouse.startX + boardPos.current.x - boardPos.current.centerX, 
         mouse.startY + boardPos.current.y - boardPos.current.centerY, 
-        mouse.x + boardPos.current.x - boardPos.current.centerX, 
-        mouse.y + boardPos.current.y - boardPos.current.centerY,
+        (mouse.hasDragged) ? mouse.x + boardPos.current.x - boardPos.current.centerX 
+                           : mouse.startX + boardPos.current.x - boardPos.current.centerX + 200, 
+        (mouse.hasDragged) ? mouse.y + boardPos.current.y - boardPos.current.centerY 
+                           : mouse.startY + boardPos.current.y - boardPos.current.centerY + 50,
         {
           content: "Lorem ipsum dolor sit amet"
         }

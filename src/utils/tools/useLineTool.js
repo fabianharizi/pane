@@ -39,8 +39,10 @@ export default function useLineTool(ref, active, enablePreview, disablePreview, 
         generateUUID("line"),
         mouse.startX + boardPos.current.x - boardPos.current.centerX, 
         mouse.startY + boardPos.current.y - boardPos.current.centerY, 
-        mouse.x + boardPos.current.x - boardPos.current.centerX, 
-        mouse.y + boardPos.current.y - boardPos.current.centerY
+        (mouse.hasDragged) ? mouse.x + boardPos.current.x - boardPos.current.centerX 
+                           : mouse.startX + boardPos.current.x - boardPos.current.centerX + 100, 
+        (mouse.hasDragged) ? mouse.y + boardPos.current.y - boardPos.current.centerY 
+                           : mouse.startY + boardPos.current.y - boardPos.current.centerY,
       )
       disablePreview()
     }
