@@ -24,7 +24,9 @@ export default function useLineTool(ref, active, enablePreview, disablePreview, 
         centerY: ref.current.scrollHeight / 2,
       }
     },
-    onDrag: (mouse) => {
+    onMove: (mouse) => {
+      if(!mouse.hasDragged) return;
+      
       enablePreview(
         "line", 
         mouse.startX + boardPos.current.x, 

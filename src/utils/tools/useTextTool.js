@@ -24,7 +24,9 @@ export default function useTextTool(ref, active, enablePreview, disablePreview, 
         centerY: ref.current.scrollHeight / 2,
       }
     },
-    onDrag: (mouse) => {
+    onMove: (mouse) => {
+      if(!mouse.hasDragged) return;
+      
       enablePreview(
         "rectangle", 
         mouse.startX + boardPos.current.x, 

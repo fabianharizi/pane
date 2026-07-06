@@ -1,21 +1,7 @@
 import styles from './Board.module.css'
 import useContent from '../../utils/hooks/useContent'
 
-export default function Board({
-    // Refs
-    boardRef,
-    canvasRef,
-    
-    // Content
-    content,
-
-    // Board State
-    boardState,
-
-    // Preview
-    preview
-  }){
-
+export default function Board({boardRef, canvasRef, content, boardState, preview}){
   const { encodeContent } = useContent([])
 
   return (

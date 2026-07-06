@@ -24,7 +24,8 @@ export default function useShapeTool(ref, active, shape, enablePreview, disableP
         centerY: ref.current.scrollHeight / 2,
       }
     },
-    onDrag: (mouse) => {
+    onMove: (mouse) => {
+      if(!mouse.hasDragged) return;
       enablePreview(
         shape, 
         mouse.startX + boardPos.current.x, 

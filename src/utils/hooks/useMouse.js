@@ -40,16 +40,14 @@ export default function useMouse(ref, callback) {
     }, setCursor);
   };
 
-  // Gets current position when mouse is moving
-  const handleMouseDrag = (e) => {
-    if (!mouse.current.isDown) return;
-
-    if (latestCallback.current.active) latestCallback.current.onDrag?.(
+  // Gets current position when mouse is dragging
+  const handleMouseMove = (e) => {
+    if (latestCallback.current.active) latestCallback.current.onMove?.(
       mouse.current = { 
         ...mouse.current,
         x: e.clientX, 
         y: e.clientY,
-        hasDragged: true,
+        hasDragged: mouse.current.isDown ? true : false
     }, setCursor)
   };
 
@@ -85,7 +83,7 @@ export default function useMouse(ref, callback) {
     setCursor();
 
     board.addEventListener('mousedown', handleMouseDown);
-    board.addEventListener('mousemove', handleMouseDrag);
+    board.addEventListener('mousemove', handleMouseMove);
     board.addEventListener('mouseup', handleMouseUp);
     board.addEventListener('click', handleMouseClick);
 
@@ -93,7 +91,7 @@ export default function useMouse(ref, callback) {
       mouse.current.isDown = false;
       board.style.cursor = 'default';
       board.removeEventListener('mousedown', handleMouseDown);
-      board.removeEventListener('mousemove', handleMouseDrag);
+      board.removeEventListener('mousemove', handleMouseMove);
       board.removeEventListener('mouseup', handleMouseUp);
       board.removeEventListener('click', handleMouseClick);
     };

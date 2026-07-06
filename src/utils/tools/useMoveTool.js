@@ -20,7 +20,9 @@ export default function useMoveTool(ref, active, scrollTo) {
       }
       setCursor("grabbing")
     },
-    onDrag: (mouse) => {
+    onMove: (mouse) => {
+      if(!mouse.hasDragged) return;
+      
       const dx = mouse.x - mouse.startX;
       const dy = mouse.y - mouse.startY;
       scrollTo(boardPos.current.x - dx, boardPos.current.y - dy);
