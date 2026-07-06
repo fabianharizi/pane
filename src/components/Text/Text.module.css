@@ -5,9 +5,8 @@
   width: var(--width);
   height: var(--height);
   color: #fff;
-  cursor: pointer;
 }
 
-.text:focus{
+/* .text:focus{
   cursor: text;
-}
+} */

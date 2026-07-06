@@ -54,7 +54,7 @@ export default function useContent(start){
           return <Line
             key={el.uuid}
             uuid={el.uuid}
-            selected={false}
+            selected={el.selected}
             startX={el.startX + centerX}
             startY={el.startY + centerY}
             x={el.x + centerX}
@@ -65,7 +65,7 @@ export default function useContent(start){
           return <Text
             key={el.uuid}
             uuid={el.uuid}
-            selected={false}
+            selected={el.selected}
             startX={el.startX + centerX}
             startY={el.startY + centerY}
             x={el.x + centerX}
