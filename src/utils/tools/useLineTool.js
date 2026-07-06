@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import useMouse from '../hooks/useMouse';
+import generateUUID from '../methods/generateUUID'
 
 // This hook is used to implement the "Line" tool. 
 // It needs a condition to be active

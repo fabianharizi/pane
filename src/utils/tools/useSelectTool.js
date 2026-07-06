@@ -4,7 +4,7 @@ import useMouse from '../hooks/useMouse';
 // This hook is used to implement the "Select" tool. 
 // It needs a condition to be active
 
-export default function useSelectTool(ref, active, scrollTo) {
+export default function useSelectTool(ref, active, selectElement) {
   const boardPos = useRef({
     x: 0, 
     y: 0
@@ -14,11 +14,9 @@ export default function useSelectTool(ref, active, scrollTo) {
     active: active,
     cursor: "default",
     onClick: (mouse, setCursor) => {
-      boardPos.current = {
-        x: ref.current.scrollLeft, 
-        y: ref.current.scrollTop
-      }
-      setCursor("grabbing")
+      const uuid = mouse.target.hasAttribute("data-uuid") ? mouse.target.getAttribute("data-uuid") : null
+      console.log(uuid)
+      selectElement(uuid)
     }
   })
 }

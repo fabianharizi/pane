@@ -10,7 +10,7 @@ export default function Line(props){
   }
 
   return(
-    <div className={styles.line} data-uuid={props.uuid} style={{
+    <div className={styles.line} data-uuid={props.uuid} data-selected={props.selected} style={{
       "--x": lineProps.x + "px",
       "--y": lineProps.y + "px",
       "--length": lineProps.length + "px",

@@ -1,6 +1,5 @@
 import { useRef } from 'react';
 import useMouse from '../hooks/useMouse';
-import generateUUID from '../methods/generateUUID'
 
 // This hook is used to implement the "Move" tool. 
 // It needs a condition to be active

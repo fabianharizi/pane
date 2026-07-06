@@ -36,7 +36,7 @@ export default function useMouse(ref, callback) {
         startY: e.clientY,
         x: e.clientX,
         y: e.clientY,
-        hasDragged = false
+        hasDragged: false
     }, setCursor);
   };
 
@@ -49,7 +49,7 @@ export default function useMouse(ref, callback) {
         ...mouse.current,
         x: e.clientX, 
         y: e.clientY,
-        hasDragged = true,
+        hasDragged: true,
     }, setCursor)
   };
 
@@ -73,7 +73,7 @@ export default function useMouse(ref, callback) {
         startY: e.clientY,
         x: e.clientX,
         y: e.clientY,
-        target: e
+        target: e.target
     }, setCursor);
   };
 

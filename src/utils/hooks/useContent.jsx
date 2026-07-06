@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Shape from '../../components/Shape/Shape';
 import Line from '../../components/Line/Line';
 import Text from "../../components/Text/Text";
@@ -12,12 +12,20 @@ export default function useContent(start){
     setContent(prev => ([...prev, {
       type: type,
       uuid: uuid,
+      selected: false,
       startX: startX,
       startY: startY,
       x: x,
       y: y,
       ...props
     }]))
+  }
+
+  const selectElement = (uuid) => {
+    setContent(prev => prev.map((el) => ({
+      ...el,
+      selected: (el.uuid == uuid) ? true : false
+    })))
   }
 
   const clearContent = () => {
@@ -34,6 +42,7 @@ export default function useContent(start){
           return <Shape 
             key={el.uuid}
             uuid={el.uuid}
+            selected={el.selected}
             type={el.type}
             startX={el.startX + centerX}
             startY={el.startY + centerY}
@@ -45,6 +54,7 @@ export default function useContent(start){
           return <Line
             key={el.uuid}
             uuid={el.uuid}
+            selected={false}
             startX={el.startX + centerX}
             startY={el.startY + centerY}
             x={el.x + centerX}
@@ -55,6 +65,7 @@ export default function useContent(start){
           return <Text
             key={el.uuid}
             uuid={el.uuid}
+            selected={false}
             startX={el.startX + centerX}
             startY={el.startY + centerY}
             x={el.x + centerX}
@@ -65,5 +76,11 @@ export default function useContent(start){
     })
   }
 
-  return [content, addElement, clearContent, encodeContent];
+  return {
+    "content": content,
+    "addElement": addElement,
+    "selectElement": selectElement,
+    "clearContent": clearContent,
+    "encodeContent": encodeContent
+  };
 }

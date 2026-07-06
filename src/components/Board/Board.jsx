@@ -10,6 +10,7 @@ import Shape from '../Shape/Shape';
 import Line from '../Line/Line';
 import Text from '../Text/Text';
 import useTextTool from '../../utils/tools/useTextTool';
+import useSelectTool from '../../utils/tools/useSelectTool';
 
 export default function Board({activeTool, setActiveTool}){
   const boardRef = useRef(null);
@@ -18,9 +19,14 @@ export default function Board({activeTool, setActiveTool}){
   const [boardState, scrollTo, scrollBy, setSize] = useBoard(boardRef, canvasRef);
   const [preview, enablePreview, disablePreview] = usePreview();
 
-  const [content, addElement, clearContent, encodeContent] = useContent([]); 
+  const {content, addElement, selectElement, clearContent, encodeContent} = useContent([]); 
 
   // Install Tool Hooks
+  useSelectTool(
+    boardRef, 
+    activeTool === 'select', 
+    selectElement
+  )
   useMoveTool(
     boardRef, 
     activeTool === 'move', 
