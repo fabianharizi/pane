@@ -20,7 +20,7 @@ export default function usePreview(){
             properties={{
               fill: "#0088aa80",
               strokeColor: "#0088aaaa",
-              strokeWidth: 1,
+              strokeWidth: 2,
               strokeStyle: "dashed"
             }}
           />
@@ -33,7 +33,7 @@ export default function usePreview(){
             y={y}
             properties={{
               strokeColor: "#0088aaaa",
-              strokeWidth: 1,
+              strokeWidth: 2,
               strokeStyle: "dashed",
               headStart: "none",
               headEnd: "none",
