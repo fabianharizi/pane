@@ -1,7 +1,7 @@
 import styles from "./Text.module.css"
 
 export default function Text(props){
-  const shapeProps = {
+  const coords = {
     x: Math.min(props.startX, props.x),
     y: Math.min(props.startY, props.y),
     width: Math.abs(props.x - props.startX),
@@ -10,10 +10,10 @@ export default function Text(props){
 
   return(
       <div className={styles.text} data-uuid={props.uuid} data-selected={props.selected} style={{
-        "--x": shapeProps.x + "px",
-        "--y": shapeProps.y + "px",
-        "--width": (shapeProps.width > 10) ? shapeProps.width + "px" : "min-content",
-        "--height":(shapeProps.height > 10) ?  shapeProps.height + "px" : "min-content"
+        "--x": coords.x + "px",
+        "--y": coords.y + "px",
+        "--width": (coords.width > 10) ? coords.width + "px" : "min-content",
+        "--height":(coords.height > 10) ?  coords.height + "px" : "min-content"
       }}>{props.content}</div>
   )
 }

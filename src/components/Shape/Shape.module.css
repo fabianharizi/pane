@@ -4,12 +4,17 @@
   left: var(--x);
   width: var(--width);
   height: var(--height);
-  border: 2px solid #fff;
-  background-color: #fff8;
+
+
+  background-color: var(--fill);
+  border-color: var(--strokeColor);
+  border-width: var(--strokeWidth);
+  border-style: var(--strokeStyle);
+  opacity: var(--opacity);
 }
 
 .rectangle{
-  border-radius: 0;
+  border-radius: var(--borderRadius);
 }
 
 .oval{

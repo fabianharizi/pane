@@ -17,6 +17,11 @@ export default function usePreview(){
             startY={startY}
             x={x}
             y={y}
+            properties={{
+              fill: "#ffffff20",
+              strokeColor: "#ffffff80",
+              strokeWidth: 1,
+            }}
           />
     
         case "line":

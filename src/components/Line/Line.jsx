@@ -2,7 +2,7 @@ import { useEffect } from "react"
 import styles from "./Line.module.css"
 
 export default function Line(props){
-  const lineProps = {
+  const coords = {
     x: props.startX,
     y: props.startY,
     length: Math.hypot(props.x - props.startX, props.y - props.startY),
@@ -11,10 +11,10 @@ export default function Line(props){
 
   return(
     <div className={styles.line} data-uuid={props.uuid} data-selected={props.selected} style={{
-      "--x": lineProps.x + "px",
-      "--y": lineProps.y + "px",
-      "--length": lineProps.length + "px",
-      "--angle": lineProps.angle + "rad"
+      "--x": coords.x + "px",
+      "--y": coords.y + "px",
+      "--length": coords.length + "px",
+      "--angle": coords.angle + "rad"
     }}></div>
   )
 }

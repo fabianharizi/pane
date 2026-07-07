@@ -9,7 +9,7 @@ import UUID from "../methods/UUID";
 export default function useContent(start){
   const [content, setContent] = useState(start)
 
-  const addElement = (type, uuid, startX, startY, x, y, props) => {
+  const addElement = (type, uuid, startX, startY, x, y, properties) => {
     setContent(prev => ([...prev, {
       type: type,
       uuid: uuid,
@@ -18,7 +18,7 @@ export default function useContent(start){
       startY: startY,
       x: x,
       y: y,
-      ...props
+      properties: properties
     }]))
   }
 
@@ -49,6 +49,7 @@ export default function useContent(start){
             startY={el.startY + centerY}
             x={el.x + centerX}
             y={el.y + centerY}
+            properties={el.properties}
           />
   
         case "line":

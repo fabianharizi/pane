@@ -7,8 +7,8 @@ export default function Board({boardRef, canvasRef, content, boardState, preview
   return (
     <div className={styles.board} ref={boardRef}>
       <div className={styles.canvas} ref={canvasRef} style={{ '--canvas-size': boardState.canvasSize + 'px' }}>
-        {preview}
         {encodeContent(content, boardState.canvasSize / 2, boardState.canvasSize / 2)}
+        {preview}
       </div>
     </div> 
   )

@@ -44,6 +44,20 @@ export default function useShapeTool(ref, active, shape, enablePreview, disableP
                            : mouse.startX + boardPos.current.x - boardPos.current.centerX + 100, 
         (mouse.hasDragged) ? mouse.y + boardPos.current.y - boardPos.current.centerY 
                            : mouse.startY + boardPos.current.y - boardPos.current.centerY + 100,
+        (shape == "rectangle") ? {
+          fill: "red",
+          strokeColor: "#ffffff",
+          strokeWidth: 2,
+          strokeStyle: "solid",
+          borderRadius: 0,
+          opacity: 1
+        } : {
+          fill: "#ffffff80",
+          strokeColor: "#ffffff",
+          strokeWidth: 2,
+          strokeStyle: "solid",
+          opacity: 1
+        }
       )
       disablePreview()
     }
