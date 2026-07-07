@@ -45,7 +45,7 @@ export default function useShapeTool(ref, active, shape, enablePreview, disableP
         (mouse.hasDragged) ? mouse.y + boardPos.current.y - boardPos.current.centerY 
                            : mouse.startY + boardPos.current.y - boardPos.current.centerY + 100,
         (shape == "rectangle") ? {
-          fill: "red",
+          fill: "#ffffff80",
           strokeColor: "#ffffff",
           strokeWidth: 2,
           strokeStyle: "solid",

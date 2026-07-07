@@ -1,10 +1,10 @@
 .line{
+  box-sizing: border-box;
   position: absolute;
-  top: var(--y);
+  top: var(--y) ;
   left: var(--x);
   width: var(--length);
-  height: 2px;
-  background-color: #fff;
+  height: calc(var(--strokeWidth) + 10px);
   transform-origin: 0 50%;
   rotate: var(--angle);
 }
@@ -12,9 +12,8 @@
 .line::before {
   content: '';
   position: absolute;
-  top: 50%;
+  top: calc(50% - var(--strokeWidth) / 2);
   left: 0;
   right: 0;
-  height: 20px;
-  transform: translateY(-50%);
+  border-top: var(--strokeWidth) var(--strokeStyle) var(--strokeColor);
 }

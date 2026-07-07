@@ -45,6 +45,13 @@ export default function useLineTool(ref, active, enablePreview, disablePreview, 
                            : mouse.startX + boardPos.current.x - boardPos.current.centerX + 100, 
         (mouse.hasDragged) ? mouse.y + boardPos.current.y - boardPos.current.centerY 
                            : mouse.startY + boardPos.current.y - boardPos.current.centerY,
+        {
+          strokeColor: "#ffffff",
+          strokeWidth: 2,
+          strokeStyle: "solid",
+          headStart: "none",
+          headEnd: "arrow"
+        }
       )
       disablePreview()
     }

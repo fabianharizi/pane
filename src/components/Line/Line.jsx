@@ -1,20 +1,37 @@
 import { useEffect } from "react"
 import styles from "./Line.module.css"
 
-export default function Line(props){
+export default function Line({
+  uuid, selected,
+  startX, startY, x, y,
+  properties
+}){
+
+  const p = {
+    strokeColor: "#ffffff",
+    strokeWidth: 2,
+    strokeStyle: "solid",
+    headStart: "none",
+    headEnd: "none",
+    ...properties
+  }
+  
   const coords = {
-    x: props.startX,
-    y: props.startY,
-    length: Math.hypot(props.x - props.startX, props.y - props.startY),
-    angle: Math.atan2(props.y - props.startY, props.x - props.startX)
+    x: startX,
+    y: startY - (p.strokeWidth / 2) - 5,
+    length: Math.hypot(x - startX, y - startY),
+    angle: Math.atan2(y - startY, x - startX)
   }
 
   return(
-    <div className={styles.line} data-uuid={props.uuid} data-selected={props.selected} style={{
+    <div className={styles.line} data-uuid={uuid} data-selected={selected} style={{
       "--x": coords.x + "px",
       "--y": coords.y + "px",
       "--length": coords.length + "px",
-      "--angle": coords.angle + "rad"
+      "--angle": coords.angle + "rad",
+      "--strokeColor": p.strokeColor,
+      "--strokeWidth": p.strokeWidth + "px",
+      "--strokeStyle": p.strokeStyle,
     }}></div>
   )
 }

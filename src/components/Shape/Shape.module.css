@@ -7,9 +7,7 @@
 
 
   background-color: var(--fill);
-  border-color: var(--strokeColor);
-  border-width: var(--strokeWidth);
-  border-style: var(--strokeStyle);
+  border: var(--strokeWidth) var(--strokeStyle) var(--strokeColor);
   opacity: var(--opacity);
 }
 

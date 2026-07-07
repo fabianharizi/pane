@@ -18,9 +18,10 @@ export default function usePreview(){
             x={x}
             y={y}
             properties={{
-              fill: "#ffffff20",
-              strokeColor: "#ffffff80",
+              fill: "#0088aa80",
+              strokeColor: "#0088aaaa",
               strokeWidth: 1,
+              strokeStyle: "dashed"
             }}
           />
     
@@ -30,6 +31,13 @@ export default function usePreview(){
             startY={startY}
             x={x}
             y={y}
+            properties={{
+              strokeColor: "#0088aaaa",
+              strokeWidth: 1,
+              strokeStyle: "dashed",
+              headStart: "none",
+              headEnd: "none",
+            }}
           />
       }}
     )

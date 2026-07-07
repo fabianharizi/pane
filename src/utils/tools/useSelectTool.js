@@ -15,7 +15,6 @@ export default function useSelectTool(ref, active, selectElement) {
     cursor: "default",
     onClick: (mouse, setCursor) => {
       const uuid = mouse.target.hasAttribute("data-uuid") ? mouse.target.getAttribute("data-uuid") : null
-      console.log(uuid)
       selectElement(uuid)
     }
   })
