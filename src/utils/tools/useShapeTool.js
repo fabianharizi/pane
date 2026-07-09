@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import useMouse from '../hooks/useMouse';
+import usePointer from '../hooks/usePointer';
 import UUID from '../methods/UUID'
 
 // This hook is used to implement the "Shape" tool. 
@@ -13,7 +13,7 @@ export default function useShapeTool(ref, active, shape, enablePreview, disableP
     centerY: 0,
   })
 
-  useMouse(ref, {
+  usePointer(ref, {
     active: active,
     cursor: "crosshair",
     onDown: (mouse) => {

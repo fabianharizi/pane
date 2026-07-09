@@ -6,6 +6,7 @@
 
   scrollbar-width: thin;
   scrollbar-color: #061b1b transparent;
+  touch-action: none;
 }
 
 .board::-webkit-scrollbar {

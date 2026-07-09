@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import useMouse from '../hooks/useMouse';
+import usePointer from '../hooks/usePointer';
 
 // This hook is used to implement the "Select" tool. 
 // It needs a condition to be active
@@ -10,7 +10,7 @@ export default function useSelectTool(ref, active, selectElement) {
     y: 0
   })
 
-  useMouse(ref, {
+  usePointer(ref, {
     active: active,
     cursor: "default",
     onClick: (mouse, setCursor) => {

@@ -9,7 +9,7 @@ import { useRef, useEffect } from "react";
 //                    onUp: (m) => {...}
 //                  }
 
-export default function useMouse(ref, callback) {
+export default function usePointer(ref, callback) {
   const mouse = useRef({
     isDown: false,
     startX: 0,
@@ -27,8 +27,12 @@ export default function useMouse(ref, callback) {
   const setCursor = (type) => {ref.current.style.cursor = type ?? latestCallback.current.cursor ?? 'default'}
 
   // Gets starting position when mouse is down
-  const handleMouseDown = (e) => {
-    if (latestCallback.current.active) latestCallback.current.onDown?.(
+  const handleDown = (e) => {
+    if (!e.isPrimary || e.button !== 0 || !latestCallback.current.active) return;
+    
+    ref.current.setPointerCapture(e.pointerId)
+
+    latestCallback.current.onDown?.(
       mouse.current = {
         ...mouse.current,
         isDown: true,
@@ -41,20 +45,35 @@ export default function useMouse(ref, callback) {
   };
 
   // Gets current position when mouse is dragging
-  const handleMouseMove = (e) => {
-    if (latestCallback.current.active) latestCallback.current.onMove?.(
+  const handleMove = (e) => {
+    if (!e.isPrimary || !latestCallback.current.active) return;
+    
+    latestCallback.current.onMove?.(
       mouse.current = { 
         ...mouse.current,
         x: e.clientX, 
         y: e.clientY,
-        hasDragged: mouse.current.isDown ? true : false,
+        hasDragged: mouse.current.isDown && Math.hypot(e.clientX - mouse.current.startX, e.clientY - mouse.current.startY) > 4,
         target: e.target
     }, setCursor)
   };
 
   // Sets isDown to false when mouse is up
-  const handleMouseUp = () => {
-    if (latestCallback.current.active) latestCallback.current.onUp?.(
+  const handleUp = (e) => {
+    if (!e.isPrimary || !latestCallback.current.active) return;
+    
+    latestCallback.current.onUp?.(
+      mouse.current = { 
+        ...mouse.current,
+        isDown: false 
+    }, setCursor)
+  };
+
+  // Sets isDown to false when mouse is up
+  const handleCancel = (e) => {
+    if (!e.isPrimary || !latestCallback.current.active) return;
+    
+    latestCallback.current.onCancel?.(
       mouse.current = { 
         ...mouse.current,
         isDown: false 
@@ -62,9 +81,10 @@ export default function useMouse(ref, callback) {
   };
 
   // Gets starting position when mouse is clicked
-  const handleMouseClick = (e) => {
-    if (mouse.current.hasDragged) return;
-    if (latestCallback.current.active) latestCallback.current.onClick?.(
+  const handleClick = (e) => {
+    if (mouse.current.hasDragged || !latestCallback.current.active) return;
+
+    latestCallback.current.onClick?.(
       mouse.current = {
         ...mouse.current,
         isDown: true,
@@ -83,18 +103,20 @@ export default function useMouse(ref, callback) {
 
     setCursor();
 
-    board.addEventListener('mousedown', handleMouseDown);
-    board.addEventListener('mousemove', handleMouseMove);
-    board.addEventListener('mouseup', handleMouseUp);
-    board.addEventListener('click', handleMouseClick);
+    board.addEventListener('pointerdown', handleDown);
+    board.addEventListener('pointermove', handleMove);
+    board.addEventListener('pointerup', handleUp);
+    board.addEventListener('pointercancel', handleCancel);
+    board.addEventListener('click', handleClick);
 
     return () => {
       mouse.current.isDown = false;
       board.style.cursor = 'default';
-      board.removeEventListener('mousedown', handleMouseDown);
-      board.removeEventListener('mousemove', handleMouseMove);
-      board.removeEventListener('mouseup', handleMouseUp);
-      board.removeEventListener('click', handleMouseClick);
+      board.removeEventListener('mousedown', handleDown);
+      board.removeEventListener('mousemove', handleMove);
+      board.removeEventListener('mouseup', handleUp);
+      board.removeEventListener('pointercancel', handleCancel);
+      board.removeEventListener('click', handleClick);
     };
 
   }, [callback.active])
