@@ -47,5 +47,9 @@ export default function usePreview(){
     setPreview(null);
   }
 
-  return [preview, enablePreview, disablePreview];
+  return {
+    "preview": preview, 
+    "enablePreview": enablePreview, 
+    "disablePreview": disablePreview
+  };
 }

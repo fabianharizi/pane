@@ -99,5 +99,9 @@ export default function useBoard(boardRef, canvasRef, content) {
     }
   }, [boardState.canvasSize]);
 
-  return [boardState, scrollTo, scrollBy];
+  return {
+    "boardState": boardState, 
+    "scrollTo": scrollTo, 
+    "scrollBy": scrollBy
+  }
 }

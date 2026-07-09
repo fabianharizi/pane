@@ -17,8 +17,8 @@ export default function App(){
 
   const [activeTool, setActiveTool] = useState("select");
   const {content, addElement, selectElement, clearContent} = useContent([]); 
-  const [boardState, scrollTo, scrollBy] = useBoard(boardRef, canvasRef, content);
-  const [preview, enablePreview, disablePreview] = usePreview();
+  const {boardState, scrollTo, scrollBy} = useBoard(boardRef, canvasRef, content);
+  const {preview, enablePreview, disablePreview} = usePreview();
 
   
 
