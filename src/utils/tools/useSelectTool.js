@@ -13,8 +13,8 @@ export default function useSelectTool(ref, active, selectElement) {
   usePointer(ref, {
     active: active,
     cursor: "default",
-    onClick: (mouse, setCursor) => {
-      const uuid = mouse.target.hasAttribute("data-uuid") ? mouse.target.getAttribute("data-uuid") : null
+    onClick: (p, setCursor) => {
+      const uuid = p.target.hasAttribute("data-uuid") ? p.target.getAttribute("data-uuid") : null
       selectElement(uuid)
     }
   })

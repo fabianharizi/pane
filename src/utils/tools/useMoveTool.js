@@ -13,21 +13,21 @@ export default function useMoveTool(ref, active, scrollTo) {
   usePointer(ref, {
     active: active,
     cursor: "grab",
-    onDown: (mouse, setCursor) => {
+    onDown: (p, setCursor) => {
       boardPos.current = {
         x: ref.current.scrollLeft, 
         y: ref.current.scrollTop
       }
       setCursor("grabbing")
     },
-    onMove: (mouse) => {
-      if(!mouse.hasDragged) return;
+    onMove: (p) => {
+      if(!p.hasDragged) return;
       
-      const dx = mouse.x - mouse.startX;
-      const dy = mouse.y - mouse.startY;
+      const dx = p.x - p.startX;
+      const dy = p.y - p.startY;
       scrollTo(boardPos.current.x - dx, boardPos.current.y - dy);
     },
-    onUp: (mouse, setCursor) => {
+    onUp: (p, setCursor) => {
       setCursor()
     }
   })

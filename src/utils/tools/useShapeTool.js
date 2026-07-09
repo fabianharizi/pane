@@ -16,7 +16,7 @@ export default function useShapeTool(ref, active, shape, enablePreview, disableP
   usePointer(ref, {
     active: active,
     cursor: "crosshair",
-    onDown: (mouse) => {
+    onDown: (p) => {
       boardPos.current = {
         x: ref.current.scrollLeft, 
         y: ref.current.scrollTop,
@@ -24,26 +24,26 @@ export default function useShapeTool(ref, active, shape, enablePreview, disableP
         centerY: ref.current.scrollHeight / 2,
       }
     },
-    onMove: (mouse) => {
-      if(!mouse.hasDragged) return;
+    onMove: (p) => {
+      if(!p.hasDragged) return;
       enablePreview(
         shape, 
-        mouse.startX + boardPos.current.x, 
-        mouse.startY + boardPos.current.y, 
-        mouse.x + boardPos.current.x, 
-        mouse.y + boardPos.current.y
+        p.startX + boardPos.current.x, 
+        p.startY + boardPos.current.y, 
+        p.x + boardPos.current.x, 
+        p.y + boardPos.current.y
       )
     },
-    onUp: (mouse) => {
+    onUp: (p) => {
       const coords = {
-        startX: mouse.startX + boardPos.current.x - boardPos.current.centerX, 
-        startY: mouse.startY + boardPos.current.y - boardPos.current.centerY, 
-        endX: (mouse.hasDragged) 
-                ? mouse.x + boardPos.current.x - boardPos.current.centerX 
-                : mouse.startX + boardPos.current.x - boardPos.current.centerX + 100, 
-        endY: (mouse.hasDragged) 
-                ? mouse.y + boardPos.current.y - boardPos.current.centerY 
-                : mouse.startY + boardPos.current.y - boardPos.current.centerY + 100, 
+        startX: p.startX + boardPos.current.x - boardPos.current.centerX, 
+        startY: p.startY + boardPos.current.y - boardPos.current.centerY, 
+        endX: (p.hasDragged) 
+                ? p.x + boardPos.current.x - boardPos.current.centerX 
+                : p.startX + boardPos.current.x - boardPos.current.centerX + 100, 
+        endY: (p.hasDragged) 
+                ? p.y + boardPos.current.y - boardPos.current.centerY 
+                : p.startY + boardPos.current.y - boardPos.current.centerY + 100, 
       }
 
       addElement(
