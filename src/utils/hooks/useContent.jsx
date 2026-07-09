@@ -9,15 +9,11 @@ import UUID from "../methods/UUID";
 export default function useContent(start){
   const [content, setContent] = useState(start)
 
-  const addElement = (type, uuid, startX, startY, x, y, properties) => {
+  const addElement = (type, uuid, properties) => {
     setContent(prev => ([...prev, {
       type: type,
       uuid: uuid,
       selected: false,
-      startX: startX,
-      startY: startY,
-      x: x,
-      y: y,
       properties: properties
     }]))
   }
@@ -34,45 +30,42 @@ export default function useContent(start){
   }
 
   const encodeContent = (content, centerX, centerY) => {
-    let c = content ? content : this.content
-    
-    return c.map(el => {
+    return content.map(el => {
+      // Stored coords are center-relative; add the center back to render at
+      // absolute canvas position (inverse of the subtraction done in onUp).
+      const properties = {
+        ...el.properties,
+        startX: el.properties.startX + centerX,
+        startY: el.properties.startY + centerY,
+        endX: el.properties.endX + centerX,
+        endY: el.properties.endY + centerY,
+      }
+
       switch(el.type){
         case "rectangle":
         case "oval":
-          return <Shape 
+          return <Shape
             key={el.uuid}
             uuid={el.uuid}
             selected={el.selected}
             type={el.type}
-            startX={el.startX + centerX}
-            startY={el.startY + centerY}
-            x={el.x + centerX}
-            y={el.y + centerY}
-            properties={el.properties}
+            properties={properties}
           />
-  
+
         case "line":
           return <Line
             key={el.uuid}
             uuid={el.uuid}
             selected={el.selected}
-            startX={el.startX + centerX}
-            startY={el.startY + centerY}
-            x={el.x + centerX}
-            y={el.y + centerY}
+            properties={properties}
           />
-  
+
         case "text":
           return <Text
             key={el.uuid}
             uuid={el.uuid}
             selected={el.selected}
-            startX={el.startX + centerX}
-            startY={el.startY + centerY}
-            x={el.x + centerX}
-            y={el.y + centerY}
-            content={el.content}
+            properties={properties}
           />
       }
     })

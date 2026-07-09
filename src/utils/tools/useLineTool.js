@@ -36,16 +36,22 @@ export default function useLineTool(ref, active, enablePreview, disablePreview, 
       )
     },
     onUp: (mouse) => {
+      const coords = {
+        startX: mouse.startX + boardPos.current.x - boardPos.current.centerX, 
+        startY: mouse.startY + boardPos.current.y - boardPos.current.centerY, 
+        endX: (mouse.hasDragged) 
+                ? mouse.x + boardPos.current.x - boardPos.current.centerX 
+                : mouse.startX + boardPos.current.x - boardPos.current.centerX + 100, 
+        endY: (mouse.hasDragged) 
+                ? mouse.y + boardPos.current.y - boardPos.current.centerY 
+                : mouse.startY + boardPos.current.y - boardPos.current.centerY, 
+      }
+      
       addElement(
         "line", 
         UUID.generate("line"),
-        mouse.startX + boardPos.current.x - boardPos.current.centerX, 
-        mouse.startY + boardPos.current.y - boardPos.current.centerY, 
-        (mouse.hasDragged) ? mouse.x + boardPos.current.x - boardPos.current.centerX 
-                           : mouse.startX + boardPos.current.x - boardPos.current.centerX + 100, 
-        (mouse.hasDragged) ? mouse.y + boardPos.current.y - boardPos.current.centerY 
-                           : mouse.startY + boardPos.current.y - boardPos.current.centerY,
         {
+          ...coords,
           strokeColor: "#ffffff",
           strokeWidth: 2,
           strokeStyle: "solid",

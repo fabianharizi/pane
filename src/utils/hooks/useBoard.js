@@ -83,7 +83,7 @@ export default function useBoard(boardRef, canvasRef, content) {
     if (content.length === 0) return
     const radius = Math.max(
       ...content.map(el =>
-        Math.max(Math.abs(el.startX), Math.abs(el.x), Math.abs(el.startY), Math.abs(el.y))
+        Math.max(Math.abs(el.properties.startX), Math.abs(el.properties.endX), Math.abs(el.properties.startY), Math.abs(el.properties.endY))
       )
     )
     setBoardState(prev => ({ ...prev, canvasSize: 5000 + radius * 2 }))

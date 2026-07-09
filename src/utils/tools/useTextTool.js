@@ -36,16 +36,22 @@ export default function useTextTool(ref, active, enablePreview, disablePreview, 
       )
     },
     onUp: (mouse) => {
+      const coords = {
+        startX: mouse.startX + boardPos.current.x - boardPos.current.centerX, 
+        startY: mouse.startY + boardPos.current.y - boardPos.current.centerY, 
+        endX: (mouse.hasDragged) 
+                ? mouse.x + boardPos.current.x - boardPos.current.centerX 
+                : mouse.startX + boardPos.current.x - boardPos.current.centerX + 200, 
+        endY: (mouse.hasDragged) 
+                ? mouse.y + boardPos.current.y - boardPos.current.centerY 
+                : mouse.startY + boardPos.current.y - boardPos.current.centerY + 50, 
+      }
+
       addElement(
         "text", 
         UUID.generate("text"),
-        mouse.startX + boardPos.current.x - boardPos.current.centerX, 
-        mouse.startY + boardPos.current.y - boardPos.current.centerY, 
-        (mouse.hasDragged) ? mouse.x + boardPos.current.x - boardPos.current.centerX 
-                           : mouse.startX + boardPos.current.x - boardPos.current.centerX + 200, 
-        (mouse.hasDragged) ? mouse.y + boardPos.current.y - boardPos.current.centerY 
-                           : mouse.startY + boardPos.current.y - boardPos.current.centerY + 50,
         {
+          ...coords,
           content: "Lorem ipsum dolor sit amet"
         }
       )

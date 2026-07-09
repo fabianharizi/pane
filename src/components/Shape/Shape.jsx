@@ -11,7 +11,6 @@ import styles from "./Shape.module.css"
 export default function Shape({
   type,
   uuid, selected,
-  startX, startY, x, y,
   properties
 }){
   
@@ -26,10 +25,10 @@ export default function Shape({
   }
 
   const coords = {
-    x: Math.min(startX, x),
-    y: Math.min(startY, y),
-    width: Math.abs(x - startX),
-    height: Math.abs(y - startY),
+    x: Math.min(p.startX, p.endX),
+    y: Math.min(p.startY, p.endY),
+    width: Math.abs(p.endX - p.startX),
+    height: Math.abs(p.endY - p.startY),
   }
   return(
     <div className={

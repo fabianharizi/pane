@@ -3,7 +3,6 @@ import styles from "./Line.module.css"
 
 export default function Line({
   uuid, selected,
-  startX, startY, x, y,
   properties
 }){
 
@@ -17,12 +16,12 @@ export default function Line({
   }
   
   const coords = {
-    x: startX,
-    y: startY - (p.strokeWidth / 2) - 5,
-    length: Math.hypot(x - startX, y - startY),
-    angle: Math.atan2(y - startY, x - startX)
+    x: p.startX,
+    y: p.startY - (p.strokeWidth / 2) - 5,
+    length: Math.hypot(p.endX - p.startX, p.endY - p.startY),
+    angle: Math.atan2(p.endY - p.startY, p.endX - p.startX)
   }
-
+  
   return(
     <div className={styles.line} data-uuid={uuid} data-selected={selected} style={{
       "--x": coords.x + "px",

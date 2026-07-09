@@ -7,17 +7,17 @@ import Line from "../../components/Line/Line";
 export default function usePreview(){
   const [preview, setPreview] = useState(null)
 
-  const enablePreview = (type, startX, startY, x, y) => {
+  const enablePreview = (type, startX, startY, endX, endY) => {
     setPreview(() => {switch(type){
         case "rectangle":
         case "oval":
           return <Shape 
             type={type}
-            startX={startX}
-            startY={startY}
-            x={x}
-            y={y}
             properties={{
+              startX: startX,
+              startY: startY,
+              endX: endX,
+              endY: endY,
               fill: "#0088aa80",
               strokeColor: "#0088aaaa",
               strokeWidth: 2,
@@ -27,11 +27,11 @@ export default function usePreview(){
     
         case "line":
           return <Line
-            startX={startX}
-            startY={startY}
-            x={x}
-            y={y}
             properties={{
+              startX: startX,
+              startY: startY,
+              endX: endX,
+              endY: endY,
               strokeColor: "#0088aaaa",
               strokeWidth: 2,
               strokeStyle: "dashed",

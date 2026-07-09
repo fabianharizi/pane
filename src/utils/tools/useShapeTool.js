@@ -35,27 +35,27 @@ export default function useShapeTool(ref, active, shape, enablePreview, disableP
       )
     },
     onUp: (mouse) => {
+      const coords = {
+        startX: mouse.startX + boardPos.current.x - boardPos.current.centerX, 
+        startY: mouse.startY + boardPos.current.y - boardPos.current.centerY, 
+        endX: (mouse.hasDragged) 
+                ? mouse.x + boardPos.current.x - boardPos.current.centerX 
+                : mouse.startX + boardPos.current.x - boardPos.current.centerX + 100, 
+        endY: (mouse.hasDragged) 
+                ? mouse.y + boardPos.current.y - boardPos.current.centerY 
+                : mouse.startY + boardPos.current.y - boardPos.current.centerY + 100, 
+      }
+
       addElement(
         shape, 
         UUID.generate(shape.slice(0, 4)),
-        mouse.startX + boardPos.current.x - boardPos.current.centerX, 
-        mouse.startY + boardPos.current.y - boardPos.current.centerY, 
-        (mouse.hasDragged) ? mouse.x + boardPos.current.x - boardPos.current.centerX 
-                           : mouse.startX + boardPos.current.x - boardPos.current.centerX + 100, 
-        (mouse.hasDragged) ? mouse.y + boardPos.current.y - boardPos.current.centerY 
-                           : mouse.startY + boardPos.current.y - boardPos.current.centerY + 100,
-        (shape == "rectangle") ? {
+        {
+          ...coords,
           fill: "#ffffff80",
           strokeColor: "#ffffff",
           strokeWidth: 2,
           strokeStyle: "solid",
           borderRadius: 0,
-          opacity: 1
-        } : {
-          fill: "#ffffff80",
-          strokeColor: "#ffffff",
-          strokeWidth: 2,
-          strokeStyle: "solid",
           opacity: 1
         }
       )

@@ -1,19 +1,28 @@
 import styles from "./Text.module.css"
 
-export default function Text(props){
+export default function Text({
+  uuid, selected,
+  properties
+}){
+
+  const p = {
+    content: "Lorem ipsum dolor sit amet",
+    ...properties
+  }
+
   const coords = {
-    x: Math.min(props.startX, props.x),
-    y: Math.min(props.startY, props.y),
-    width: Math.abs(props.x - props.startX),
-    height: Math.abs(props.y - props.startY),
+    x: Math.min(p.startX, p.endX),
+    y: Math.min(p.startY, p.endY),
+    width: Math.abs(p.endX - p.startX),
+    height: Math.abs(p.endY - p.startY),
   }
 
   return(
-      <div className={styles.text} data-uuid={props.uuid} data-selected={props.selected} style={{
+      <div className={styles.text} data-uuid={uuid} data-selected={selected} style={{
         "--x": coords.x + "px",
         "--y": coords.y + "px",
         "--width": (coords.width > 10) ? coords.width + "px" : "min-content",
         "--height":(coords.height > 10) ?  coords.height + "px" : "min-content"
-      }}>{props.content}</div>
+      }}>{p.content}</div>
   )
 }
