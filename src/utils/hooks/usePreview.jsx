@@ -18,7 +18,7 @@ export default function usePreview(){
               startY: startY,
               endX: endX,
               endY: endY,
-              fill: "#0088aa80",
+              fill: "transparent",
               strokeColor: "#0088aaaa",
               strokeWidth: 2,
               strokeStyle: "dashed"

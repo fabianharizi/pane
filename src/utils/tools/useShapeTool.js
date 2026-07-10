@@ -51,7 +51,7 @@ export default function useShapeTool(ref, active, shape, enablePreview, disableP
         UUID.generate(shape.slice(0, 4)),
         {
           ...coords,
-          fill: "#447088",
+          fill: "transparent",
           strokeColor: "#ffffff",
           strokeWidth: 2,
           strokeStyle: "solid",
