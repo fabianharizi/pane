@@ -15,7 +15,7 @@ export default function Shape({
 }){
   
   const p = {
-    fill: "#ffffff88",
+    fill: "#ffffff",
     strokeColor: "#ffffff",
     strokeWidth: 2,
     strokeStyle: "solid",

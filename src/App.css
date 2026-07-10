@@ -36,3 +36,10 @@ body{
   align-content: center;
   pointer-events: none;
 }
+
+.container .properties{
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  pointer-events: none;
+}

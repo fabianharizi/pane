@@ -1,0 +1,202 @@
+.properties{
+  width: 260px;
+  background-color: #fff2;
+  backdrop-filter: blur(5px);
+  border: 1px solid #fff2;
+  border-radius: 5px;
+  padding: 12px;
+  box-shadow: 4px 4px 15px #15151580;
+
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  color: #e8e8e8;
+  font-size: 13px;
+}
+
+.header{
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #0003;
+}
+
+.type{
+  text-transform: capitalize;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.uuid{
+  font-size: 10px;
+  color: #ffffff66;
+  font-family: ui-monospace, monospace;
+}
+
+.fields{
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.field{
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  align-items: center;
+  gap: 8px;
+}
+
+.label{
+  color: #ffffffaa;
+}
+
+/* Two number inputs sharing one row, e.g. Position → X / Y */
+.pair{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  min-width: 0;
+}
+
+.part{
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  padding: 3px 6px;
+  border-radius: 3px;
+  border: 1px solid #ffffff26;
+  background-color: #0003;
+  transition: 0.2s ease;
+}
+.part:focus-within{
+  border-color: #6c6cff;
+}
+
+.prefix{
+  color: #ffffff66;
+  font-size: 11px;
+  line-height: 1;
+  user-select: none;
+}
+
+.part input{
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #e8e8e8;
+  font: inherit;
+  outline: none;
+}
+
+/* Spinners eat horizontal space the paired inputs don't have */
+.part input::-webkit-outer-spin-button,
+.part input::-webkit-inner-spin-button{
+  appearance: none;
+  margin: 0;
+}
+.part input[type="number"]{
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+/* Text inputs, number inputs and selects */
+.input{
+  width: 100%;
+  box-sizing: border-box;
+  padding: 4px 6px;
+  border-radius: 3px;
+  border: 1px solid #ffffff26;
+  background-color: #0003;
+  color: #e8e8e8;
+  font: inherit;
+  outline: none;
+  transition: 0.2s ease;
+}
+.input:focus{
+  border-color: #6c6cff;
+}
+
+.textarea{
+  grid-column: 1 / -1;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 6px;
+  border-radius: 3px;
+  border: 1px solid #ffffff26;
+  background-color: #0003;
+  color: #e8e8e8;
+  font: inherit;
+  resize: vertical;
+  outline: none;
+  transition: 0.2s ease;
+}
+.textarea:focus{
+  border-color: #6c6cff;
+}
+
+.colorField{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.toggle{
+  flex: none;
+  width: 14px;
+  height: 14px;
+  accent-color: #6c6cff;
+  cursor: pointer;
+}
+
+.color{
+  width: 100%;
+  min-width: 0;
+  height: 26px;
+  padding: 0;
+  border: 1px solid #ffffff26;
+  border-radius: 3px;
+  background-color: transparent;
+  cursor: pointer;
+}
+
+/* Color switched off: show a checkerboard through the (dimmed) swatch */
+.colorOff{
+  opacity: 0.35;
+  background-image:
+    linear-gradient(45deg, #ffffff40 25%, transparent 25%, transparent 75%, #ffffff40 75%),
+    linear-gradient(45deg, #ffffff40 25%, transparent 25%, transparent 75%, #ffffff40 75%);
+  background-size: 8px 8px;
+  background-position: 0 0, 4px 4px;
+}
+.color::-webkit-color-swatch-wrapper{
+  padding: 2px;
+}
+.color::-webkit-color-swatch{
+  border: none;
+  border-radius: 2px;
+}
+
+.range{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.range input{
+  flex: 1;
+  min-width: 0;
+  accent-color: #6c6cff;
+  cursor: pointer;
+}
+
+.readout{
+  width: 38px;
+  text-align: right;
+  color: #ffffffaa;
+  font-variant-numeric: tabular-nums;
+}

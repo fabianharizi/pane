@@ -8,14 +8,11 @@ import UUID from "../methods/UUID";
 
 export default function useContent(start){
   const [content, setContent] = useState(start)
-  const [selectedElement, setSelectedElement] = useState()
+  const [selectedElement, setSelectedElement] = useState(null)
 
   const hasElement = (uuid) => content.some(el => el.uuid === uuid);
 
-  const getElement = (uuid) => {
-    if (!hasElement(uuid)) return;
-    content.find(el => el.uuid === uuid);
-  }
+  const getElement = (uuid) => content.find(el => el.uuid === uuid);
 
   const addElement = (type, uuid, properties) => {
     setContent(prev => ([...prev, {
@@ -26,13 +23,15 @@ export default function useContent(start){
     }]))
   }
 
+  // Single-select. Any id that doesn't match an element (e.g. `null` from a click
+  // on empty canvas) deselects everything.
   const selectElement = (uuid) => {
-    if (!hasElement(uuid)) return;
+    const exists = hasElement(uuid);
 
-    setSelectedElement(uuid)
+    setSelectedElement(exists ? uuid : null)
     setContent(prev => prev.map((el) => ({
       ...el,
-      selected: (el.uuid === uuid) ? true : false
+      selected: exists && el.uuid === uuid
     })))
   }
 

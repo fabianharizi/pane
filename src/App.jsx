@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import './App.css'
 import Board from './components/Board/Board';
 import Toolbar from './components/Toolbar/Toolbar';
+import Properties from './components/Properties/Properties';
 import useContent from './utils/hooks/useContent';
 import useBoard from './utils/hooks/useBoard';
 import usePreview from './utils/hooks/usePreview';
@@ -69,9 +70,11 @@ export default function App(){
         />
         <div className="interface">
           <div className="properties">
-            {/* <Properties 
-              activeElement={}
-            /> */}
+            <Properties
+              selectedElement={selectedElement}
+              getElement={getElement}
+              updateElement={updateElement}
+            />
           </div>
           <div className="toolbar">
             <Toolbar 
