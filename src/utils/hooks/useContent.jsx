@@ -10,6 +10,10 @@ export default function useContent(start){
   const [content, setContent] = useState(start)
   const [selectedElement, setSelectedElement] = useState()
 
+  const hasElement = (uuid) => content.some(el => el.uuid === uuid);
+
+  const getElement = (uuid) => content.find(el => el.uuid === uuid);
+
   const addElement = (type, uuid, properties) => {
     setContent(prev => ([...prev, {
       type: type,
@@ -22,10 +26,21 @@ export default function useContent(start){
   const selectElement = (uuid) => {
     if (!hasElement(uuid)) return;
 
+    setSelectedElement(uuid)
     setContent(prev => prev.map((el) => ({
       ...el,
       selected: (el.uuid === uuid) ? true : false
     })))
+  }
+
+  const updateElement = (uuid, properties) => {
+    if (!hasElement(uuid)) return;
+
+    setContent(prev => prev.map(el =>
+      el.uuid === uuid
+        ? { ...el, properties: { ...el.properties, ...properties } }
+        : el
+    ))
   }
 
   const clearContent = () => {
@@ -74,24 +89,14 @@ export default function useContent(start){
     })
   }
 
-  const updateElement = (uuid, properties) => {
-    if (!hasElement(uuid)) return;
-
-    setContent(prev => prev.map(el =>
-      el.uuid === uuid
-        ? { ...el, properties: { ...el.properties, ...properties } }
-        : el
-    ))
-  }
-
-
-  const hasElement = (uuid) => content.some(el => el.uuid === uuid);
-
   return {
     "content": content,
     "selectedElement": selectedElement,
+    "hasElement": hasElement,
+    "getElement": getElement,
     "addElement": addElement,
     "selectElement": selectElement,
+    "updateElement": updateElement,
     "clearContent": clearContent,
     "encodeContent": encodeContent
   };
