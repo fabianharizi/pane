@@ -12,7 +12,10 @@ export default function useContent(start){
 
   const hasElement = (uuid) => content.some(el => el.uuid === uuid);
 
-  const getElement = (uuid) => content.find(el => el.uuid === uuid);
+  const getElement = (uuid) => {
+    if (!hasElement(uuid)) return;
+    content.find(el => el.uuid === uuid);
+  }
 
   const addElement = (type, uuid, properties) => {
     setContent(prev => ([...prev, {
