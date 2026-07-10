@@ -16,7 +16,8 @@ export default function usePointer(ref, callback) {
     startY: 0,
     x: 0,
     y: 0,
-    hasDragged: false
+    hasDragged: false,
+    target: null
   });
 
   const latestCallback = useRef(callback);
@@ -40,21 +41,24 @@ export default function usePointer(ref, callback) {
         startY: e.clientY,
         x: e.clientX,
         y: e.clientY,
-        hasDragged: false
+        hasDragged: false,
+        target: e.target, 
     }, setCursor);
   };
 
   // Gets current position when pointer is dragging
   const handleMove = (e) => {
     if (!e.isPrimary || !latestCallback.current.active) return;
-    
+
+    // `target` is deliberately NOT updated here: while a pointer is captured every
+    // move is retargeted to `ref`, so this would overwrite the real pointerdown
+    // target (which onClick relies on) with the board div.
     latestCallback.current.onMove?.(
-      pointer.current = { 
+      pointer.current = {
         ...pointer.current,
-        x: e.clientX, 
+        x: e.clientX,
         y: e.clientY,
         hasDragged: pointer.current.isDown && Math.hypot(e.clientX - pointer.current.startX, e.clientY - pointer.current.startY) > 4,
-        target: e.target
     }, setCursor)
   };
 
@@ -92,7 +96,6 @@ export default function usePointer(ref, callback) {
         startY: e.clientY,
         x: e.clientX,
         y: e.clientY,
-        target: e.target
     }, setCursor);
   };
 

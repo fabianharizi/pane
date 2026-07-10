@@ -8,6 +8,7 @@ import UUID from "../methods/UUID";
 
 export default function useContent(start){
   const [content, setContent] = useState(start)
+  const [selectedElement, setSelectedElement] = useState()
 
   const addElement = (type, uuid, properties) => {
     setContent(prev => ([...prev, {
@@ -19,9 +20,11 @@ export default function useContent(start){
   }
 
   const selectElement = (uuid) => {
+    if (!hasElement(uuid)) return;
+
     setContent(prev => prev.map((el) => ({
       ...el,
-      selected: (UUID.validate(uuid) && el.uuid == uuid) ? true : false
+      selected: (el.uuid === uuid) ? true : false
     })))
   }
 
@@ -71,8 +74,22 @@ export default function useContent(start){
     })
   }
 
+  const updateElement = (uuid, properties) => {
+    if (!hasElement(uuid)) return;
+
+    setContent(prev => prev.map(el =>
+      el.uuid === uuid
+        ? { ...el, properties: { ...el.properties, ...properties } }
+        : el
+    ))
+  }
+
+
+  const hasElement = (uuid) => content.some(el => el.uuid === uuid);
+
   return {
     "content": content,
+    "selectedElement": selectedElement,
     "addElement": addElement,
     "selectElement": selectElement,
     "clearContent": clearContent,
