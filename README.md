@@ -8,7 +8,7 @@ The guiding philosophy: **UI components are thin; all real behavior lives in cus
 
 ## Status
 
-Early development. The canvas, tool dispatch, keyboard shortcuts, and a callback-based hook architecture are in place. Drawing tools (rectangle, oval, line, text), a pan tool, and a click-to-select tool work end-to-end.
+Early development. The canvas, tool dispatch, keyboard shortcuts, a pointer-event hook with capture, a selection box with resize/move handles, and a live properties panel are in place. Drawing tools (rectangle, oval, line, text), a pan tool, and a click-to-select tool work end-to-end.
 
 ---
 
@@ -16,14 +16,17 @@ Early development. The canvas, tool dispatch, keyboard shortcuts, and a callback
 
 - **Infinite scrollable canvas** — dark grid with a center crosshair, scrolled to center on load, grows and shrinks to fit content
 - **Move tool** — click-drag to pan (`grab`/`grabbing` cursors); hold **Space** from any tool to pan momentarily, releasing restores the tool you had
-- **Select tool** — click an element to select it, click empty canvas to deselect (single-select; the `selected` flag is tracked and stamped as `data-selected`, but there's no visual highlight styling yet)
+- **Select tool** — click an element to select it, click empty canvas to deselect (single-select)
 - **Rectangle / Oval tools** — drag to draw with a live dashed-teal ghost preview; a plain click drops a default 100×100 element
 - **Line tool** — drag to draw a straight line (arrowhead metadata is stored per line but not rendered yet)
-- **Text tool** — drag (or click) to drop a placeholder text box, then auto-switches back to Select
-- **Per-element styling** — every element carries its own `properties` bag (fill, stroke, opacity, …); each component applies its own defaults
+- **Text tool** — drag (or click) to drop a placeholder text box
+- **Draw = select** — a freshly drawn element is auto-selected and the tool flips back to Select
+- **Selection box** — resize handles (corners + edges, **Shift** locks aspect ratio, minimum size so it never flips), endpoint handles for lines, and drag-the-body to move the whole element
+- **Properties panel** — edit the selected element's geometry and style live (position/size, fill & stroke with an on/off toggle, stroke width/style, corner radius, opacity, text)
+- **Per-element styling** — every element carries its own `properties` bag; each component applies its own defaults
 - **Element identity** — crypto-random ids (`rect-a1b2c3d4e5`) used as React keys and `data-uuid` attributes
 - **Keyboard shortcuts** — sticky tool keys `V` `H` `R` `O` `L` `T`, momentary Space-to-pan, exact modifier matching (a bare `R` won't collide with Ctrl+R), tooltips on toolbar buttons
-- **Per-tool cursors** — declared per tool, switchable mid-gesture
+- **Pointer input** — Pointer Events with `setPointerCapture`, so a drag keeps tracking even when the pointer leaves the element; per-tool cursors, switchable mid-gesture
 
 ---
 
@@ -35,28 +38,33 @@ There are two hook layers.
 
 ### Layer 1 — Primitives
 
-**`useMouse(ref, callback)`** — the event bridge. Attaches `mousedown`/`mousemove`/`mouseup`/`click` listeners to `ref.current` while `callback.active` is true and delivers each event to the consumer's callbacks. Returns nothing — it's a sink, not a source.
+**`usePointer(ref, callback)`** — the event bridge. Attaches **Pointer Events** (`pointerdown`/`pointermove`/`pointerup`/`pointercancel`/`lostpointercapture`/`click`) to `ref.current` while `callback.active` is true and delivers each to the consumer's callbacks. Returns nothing — it's a sink, not a source.
 
 ```js
-useMouse(boardRef, {
-  active,                                // boolean: listeners attach only while true
-  cursor,                                // optional base cursor, applied while active
-  onDown:  (mouse, setCursor) => {...},  // optional
-  onMove:  (mouse, setCursor) => {...},  // optional, every mousemove
-  onUp:    (mouse, setCursor) => {...},  // optional
-  onClick: (mouse, setCursor) => {...},  // optional, only when it wasn't a drag
+usePointer(boardRef, {
+  active,                                  // boolean: listeners attach only while true
+  cursor,                                  // optional base cursor, applied while active
+  onDown:  (pointer, setCursor) => {...},  // optional
+  onMove:  (pointer, setCursor) => {...},  // optional, every pointermove
+  onUp:    (pointer, setCursor) => {...},  // optional
+  onClick: (pointer, setCursor) => {...},  // optional, only when it wasn't a drag
 });
 ```
 
-Each callback receives a `mouse` snapshot — `{ isDown, startX, startY, x, y, hasDragged, target }` in viewport coordinates — plus a `setCursor(type?)` helper (`setCursor('grabbing')` overrides mid-gesture, `setCursor()` resets to the base). `hasDragged` flips true once the mouse moves while down; `onClick` fires only when it stayed false — that's how a click is told apart from the end of a drag. `mouse.target` is the DOM event target (the select tool reads `data-uuid` off it).
+Each callback receives a `pointer` snapshot — `{ isDown, startX, startY, x, y, hasDragged, target, shiftKey }` in viewport coordinates — plus a `setCursor(type?)` helper. Notable behaviors:
 
-*Why callback-based?* Mouse coordinates change ~60×/sec during a drag. Returning them as state would re-render the world on every move; delivering snapshots to callbacks lets each tool decide what (if anything) should render. Internally the hook keeps two refs — live mouse state, and a "latest callback" ref so handlers always see current consumer logic without re-attaching DOM listeners every render.
+- **Pointer capture** (`setPointerCapture` on down) keeps a drag alive when the pointer leaves the element; `handleDown` calls `stopPropagation` so a nested element owns its gesture (a handle doesn't let the board's tools steal capture).
+- **4px slop** — `hasDragged` only flips once the pointer travels >4px, so a jittery click isn't read as a drag.
+- **Robust gesture end** — a missed pointer-up (`isDown` while `e.buttons === 0`) and `lostpointercapture` both reset state, so a drag can't "resume on hover" without the button held.
+- **`onClick`** fires only for a gesture whose `pointerdown` this instance saw *and* that wasn't a drag — so a tool that activates mid-gesture doesn't catch the trailing click with a stale target.
+
+*Why callback-based?* Pointer coordinates change ~60×/sec during a drag. Returning them as state would re-render the world on every move; delivering snapshots to callbacks lets each tool decide what (if anything) should render. Internally the hook keeps refs for live pointer state and a "latest callback" ref, so handlers always see current consumer logic without re-attaching listeners every render.
 
 **`useBoard(boardRef, canvasRef, content)` → `{ boardState, scrollTo, scrollBy }`** — owns board/canvas geometry and the dynamic-resize logic. `scrollTo(x, y)`/`scrollBy(x, y)` mutate the DOM; a scroll listener mirrors the position back into state (one source of truth, synced by subscription). `boardState.canvasSize` (default `5000`) drives the canvas width/height; an effect watching `content` recomputes it from the farthest element extent, and a `useLayoutEffect` scroll-corrects when it changes (see *Dynamic canvas sizing*).
 
 **`usePreview()` → `{ preview, enablePreview, disablePreview }`** — the drag ghost. `enablePreview(type, startX, startY, endX, endY)` stores a ready-to-render dashed-teal `<Shape>`/`<Line>` element; `disablePreview()` clears it; `Board` renders it above the content.
 
-**`useContent(start)` → `{ content, addElement, selectElement, clearContent, encodeContent }`** — the committed elements. Each element is:
+**`useContent(start)` → `{ content, selectedElement, hasElement, getElement, addElement, selectElement, updateElement, clearContent, encodeContent }`** — the committed elements. Each element is:
 
 ```js
 { type: "rectangle" | "oval" | "line" | "text",
@@ -71,45 +79,54 @@ Each callback receives a `mouse` snapshot — `{ isDown, startX, startY, x, y, h
 | `line` | `startX startY endX endY` | `strokeColor strokeWidth strokeStyle headStart headEnd` *(heads stored, not drawn yet)* |
 | `text` | `startX startY endX endY` | `content` |
 
-`addElement(type, uuid, properties)` appends; `selectElement(uuid)` marks one element selected (any non-matching id deselects everything); `encodeContent(content, centerX, centerY)` maps stored elements to rendered `<Shape>`/`<Line>`/`<Text>` components, adding the center back into their coordinates. Geometry and style reach CSS through inline custom properties (`--x`, `--width`, `--fill`, …).
+- `addElement(type, uuid, properties)` appends **and auto-selects** the new element (deselecting the rest).
+- `selectElement(uuid)` single-selects; any non-matching id (e.g. `null`) deselects everything.
+- `getElement` / `hasElement` look up by id; `updateElement(uuid, patch)` **merges** into `properties` (this is what the properties panel and the selection handles call).
+- `encodeContent(content, centerX, centerY)` maps stored elements to rendered `<Shape>`/`<Line>`/`<Text>`, adding the center back into their coordinates. Geometry and style reach CSS through inline custom properties (`--x`, `--width`, `--fill`, …).
 
 ### Layer 2 — Tools
 
-Each tool is a hook composing `useMouse` with the primitives. All five are mounted unconditionally in `App.jsx`; the `active` boolean decides whether listeners exist.
+Each tool is a hook composing `usePointer` with the primitives. All five are mounted unconditionally in `App.jsx`; the `active` boolean decides whether listeners exist.
 
-- **`useSelectTool(ref, active, selectElement)`** — on click, reads `data-uuid` off the event target; empty canvas → `selectElement(null)` → deselect all.
-- **`useMoveTool(ref, active, scrollTo)`** — on down, snapshots scroll and flips to `grabbing`; on move, scrolls by the inverse mouse delta.
-- **`useShapeTool(ref, active, shape, enablePreview, disablePreview, addElement)`** — one hook for rectangle *and* oval; App passes the `activeTool` string through as `shape`.
-- **`useLineTool(ref, active, enablePreview, disablePreview, addElement)`** — same lifecycle, hardcoded `"line"`.
-- **`useTextTool(ref, active, enablePreview, disablePreview, addElement, setActiveTool)`** — same lifecycle (previews as a rectangle ghost), commits a `"text"` element with placeholder content, then switches back to `"select"`.
+- **`useSelectTool(ref, active, selectElement)`** — on click, reads `data-uuid` off `pointer.target.closest('[data-uuid]')`; empty canvas → `selectElement(null)` → deselect all.
+- **`useMoveTool(ref, active, scrollTo)`** — on down, snapshots scroll and flips to `grabbing`; on move, scrolls by the inverse pointer delta.
+- **`useShapeTool(ref, active, shape, enablePreview, disablePreview, addElement, setActiveTool)`** — one hook for rectangle *and* oval; App passes the `activeTool` string through as `shape`.
+- **`useLineTool(ref, active, enablePreview, disablePreview, addElement, setActiveTool)`** — same lifecycle, hardcoded `"line"`.
+- **`useTextTool(ref, active, enablePreview, disablePreview, addElement, setActiveTool)`** — same lifecycle (previews as a rectangle ghost), commits a `"text"` element with placeholder content.
 
-The shared drawing-tool lifecycle: `onDown` snapshots the scroll position and canvas center; `onMove` (only once `hasDragged`) shows the preview at absolute coordinates; `onUp` commits via `addElement` at center-relative coordinates with the tool's default style, then hides the preview. A plain click commits a default-sized element instead.
+The shared drawing-tool lifecycle: `onDown` snapshots the scroll position and canvas center; `onMove` (only once `hasDragged`) shows the preview at absolute coordinates; `onUp` commits via `addElement` at center-relative coordinates, hides the preview, then **`setActiveTool("select")`**. Since `addElement` also selects the new element, drawing something leaves it selected under the Select tool. A plain click commits a default-sized element instead.
+
+### Selection & properties
+
+**`SelectionBox`** renders once, for the selected element, inside the canvas. It's *controlled* — it reads `element.properties` and edits through `updateElement`, holding no geometry state of its own. Box elements get 8 resize handles (corners + edges; **Shift** locks aspect ratio; a minimum size stops them flipping); lines get two endpoint handles that move each endpoint directly (preserving direction); dragging the box interior moves the whole element. All dragging is gated to the Select tool, so panning over a selected element pans rather than moving it.
+
+**`Properties`** is a schema-driven panel: a table declares which fields each element type exposes and how to render them, and every input reads from `element.properties` and writes through `updateElement`. `position`/`size` are derived from the stored corners; number inputs keep a draft so negative (center-relative) coordinates are typeable; `fill`/`stroke` have an on/off toggle that stores the CSS keyword `transparent`.
 
 ### Data flow
 
 ```
-      DOM events on the board div (mousedown / mousemove / mouseup / click)
+      Pointer events on the board div (pointerdown / move / up / click)
                         │
-                     useMouse ─── active? ──no──▶ (listeners detached)
+                    usePointer ─── active? ──no──▶ (listeners detached)
                         │
-        onDown / onMove / onUp / onClick   ({ ...mouse }, setCursor)
+       onDown / onMove / onUp / onClick   ({ ...pointer }, setCursor)
                         │
              the active tool hook decides
       ┌─────────────────┼──────────────────────┐
 enablePreview() /   addElement()          scrollTo() / scrollBy()
-disablePreview()        │                        │
-      │                 │                  mutates DOM scroll
+disablePreview()   selectElement()               │
+      │            updateElement()          mutates DOM scroll
 usePreview state   useContent state              │
       └────────┬────────┘             scroll listener mirrors → boardState
                ▼
-      App re-renders → Board renders content + ghost
+   App re-renders → Board renders content + ghost + SelectionBox
 ```
 
 ### Coordinate system
 
 Three spaces:
 
-1. **Viewport** — what `mouse.x/y` gives you (`e.clientX/Y`). The board's top-left sits at the viewport origin, so viewport coords double as board coords.
+1. **Viewport** — what `pointer.x/y` gives you (`e.clientX/Y`). The board's top-left sits at the viewport origin, so viewport coords double as board coords.
 2. **Canvas-absolute** — relative to the canvas div's top-left: `viewport + scroll` (scroll snapshotted at `onDown`).
 3. **Center-relative** — relative to the canvas center: `canvas-absolute − center`, where the commit-time center is `scrollWidth / 2` (snapshotted at `onDown`) and the render-time center is `canvasSize / 2`.
 
@@ -143,21 +160,21 @@ Shortcuts are declared per-tool in `toolset.js` — the toolbar buttons and key 
 
 ## Adding a new tool
 
-Write a hook that composes `useMouse`:
+Write a hook that composes `usePointer`:
 
 ```js
 import { useRef } from 'react';
-import useMouse from '../hooks/useMouse';
+import usePointer from '../hooks/usePointer';
 
-export default function useXxxTool(ref, active, /* deps */) {
+export default function useXxxTool(ref, active, /* deps */, setActiveTool) {
   const snapshot = useRef(null);
 
-  useMouse(ref, {
+  usePointer(ref, {
     active,
     cursor: 'crosshair',
-    onDown: (mouse) => { /* snapshot scroll + center from ref.current */ },
-    onMove: (mouse) => { if (!mouse.hasDragged) return; /* preview at ABSOLUTE coords */ },
-    onUp:   (mouse) => { /* commit at CENTER-RELATIVE coords, clean up */ },
+    onDown: (pointer) => { /* snapshot scroll + center from ref.current */ },
+    onMove: (pointer) => { if (!pointer.hasDragged) return; /* preview at ABSOLUTE coords */ },
+    onUp:   (pointer) => { /* commit at CENTER-RELATIVE coords, clean up, setActiveTool("select") */ },
   });
 }
 ```
@@ -200,13 +217,15 @@ There is no test runner configured.
 - [x] Select / Move / Rectangle / Oval / Line / Text tools
 - [x] Per-element style properties, element ids, live drag preview
 - [x] Dynamic canvas sizing, keyboard shortcuts, per-tool cursors
-- [ ] Selection highlight (the `selected` flag exists; nothing styles it yet)
-- [ ] Pointer Events + pointer capture in `useMouse` (drags that leave the board; touch support)
-- [ ] Element movement (drag to reposition)
-- [ ] Properties panel (stubbed in `App.jsx`) to edit per-element style
+- [x] Pointer Events + pointer capture (drags that leave the element; groundwork for touch)
+- [x] Selection box — resize (with Shift aspect-lock + min size), line endpoints, body-drag to move
+- [x] Properties panel to edit per-element geometry and style
+- [ ] Selection highlight on the element itself (the `selected` flag exists; only the box shows it)
 - [ ] Editable text content (currently a fixed placeholder string)
 - [ ] Undo / redo / delete (shortcut plumbing ready via `useShortcuts` `actions`)
 - [ ] Line arrowheads (`headStart`/`headEnd` are stored, not yet rendered)
+- [ ] Rotation handles (the selection box is axis-aligned only)
+- [ ] Single source of truth for selection (drop the per-element `selected` flag)
 - [ ] Zoom (needs a viewport-transform refactor first — see `CLAUDE.md`)
 - [ ] Layers panel (array order already is z-order)
 - [ ] Tool-key constants module, TypeScript migration

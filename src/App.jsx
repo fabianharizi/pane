@@ -39,19 +39,21 @@ export default function App(){
     scrollTo 
   )
   useShapeTool(
-    boardRef, 
-    activeTool === 'rectangle' || activeTool === 'oval', 
+    boardRef,
+    activeTool === 'rectangle' || activeTool === 'oval',
     activeTool,
-    enablePreview, 
-    disablePreview, 
+    enablePreview,
+    disablePreview,
     addElement,
+    setActiveTool
   )
   useLineTool(
-    boardRef, 
-    activeTool === 'line', 
-    enablePreview, 
-    disablePreview, 
-    addElement
+    boardRef,
+    activeTool === 'line',
+    enablePreview,
+    disablePreview,
+    addElement,
+    setActiveTool
   )
   useTextTool(
     boardRef, 
@@ -65,12 +67,16 @@ export default function App(){
   return (
     <>
       <main className="container">
-        <Board 
+        <Board
           boardRef={boardRef}
           canvasRef={canvasRef}
           content={content}
           boardState={boardState}
           preview={preview}
+          selectedElement={selectedElement}
+          getElement={getElement}
+          updateElement={updateElement}
+          selectionInteractive={activeTool === 'select'}
         />
         <div className="interface">
           <div className="properties">

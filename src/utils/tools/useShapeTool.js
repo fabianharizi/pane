@@ -5,7 +5,7 @@ import UUID from '../methods/UUID'
 // This hook is used to implement the "Shape" tool. 
 // It needs a condition to be active
 
-export default function useShapeTool(ref, active, shape, enablePreview, disablePreview, addElement) {
+export default function useShapeTool(ref, active, shape, enablePreview, disablePreview, addElement, setActiveTool) {
   const boardPos = useRef({
     x: 0, 
     y: 0,
@@ -60,6 +60,7 @@ export default function useShapeTool(ref, active, shape, enablePreview, disableP
         }
       )
       disablePreview()
+      setActiveTool("select")
     }
   })
 }

@@ -14,13 +14,19 @@ export default function useContent(start){
 
   const getElement = (uuid) => content.find(el => el.uuid === uuid);
 
+  // Adding an element selects it (and deselects the rest), so a freshly drawn
+  // shape/line/text is immediately the active selection.
   const addElement = (type, uuid, properties) => {
-    setContent(prev => ([...prev, {
-      type: type,
-      uuid: uuid,
-      selected: false,
-      properties: properties
-    }]))
+    setContent(prev => ([
+      ...prev.map(el => ({ ...el, selected: false })),
+      {
+        type: type,
+        uuid: uuid,
+        selected: true,
+        properties: properties
+      }
+    ]))
+    setSelectedElement(uuid)
   }
 
   // Single-select. Any id that doesn't match an element (e.g. `null` from a click

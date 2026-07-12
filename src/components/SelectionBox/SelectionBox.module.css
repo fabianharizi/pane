@@ -1,0 +1,59 @@
+.box{
+  position: absolute;
+  top: var(--y);
+  left: var(--x);
+  width: var(--width);
+  height: var(--height);
+  border: 1px solid #6c6cff;
+
+  /* Non-interactive (e.g. while panning): just an outline, clicks pass through. */
+  pointer-events: none;
+}
+
+/* Interactive (select tool): the interior is the body-drag target. */
+.box.interactive{
+  pointer-events: auto;
+  cursor: move;
+}
+
+.handle{
+  position: absolute;
+  left: var(--hx);
+  top: var(--hy);
+  transform: translate(-50%, -50%);
+
+  width: 8px;
+  height: 8px;
+  box-sizing: border-box;
+  background-color: #fff;
+  border: 1px solid #6c6cff;
+  border-radius: 2px;
+
+  pointer-events: auto;
+}
+
+/* Round endpoint dots for line elements */
+.endpoint{
+  position: absolute;
+  left: var(--hx);
+  top: var(--hy);
+  transform: translate(-50%, -50%);
+
+  width: 10px;
+  height: 10px;
+  box-sizing: border-box;
+  background-color: #fff;
+  border: 1px solid #6c6cff;
+  border-radius: 50%;
+
+  cursor: move;
+  pointer-events: auto;
+}
+
+/* Enlarged invisible hit area so the small handles are easy to grab */
+.handle::before,
+.endpoint::before{
+  content: "";
+  position: absolute;
+  inset: -5px;
+}
