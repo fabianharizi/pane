@@ -2,10 +2,10 @@ import styles from "./SelectionBox.module.css"
 import usePointer from './../../utils/hooks/usePointer';
 import { useRef } from "react";
 
-// Smallest a box element may be resized to (px). Prevents collapse/flip.
+// Smallest the selection box may be resized to (px). Prevents collapse/flip.
 const MIN_SIZE = 10
 
-// Box-element handles. Each declares which edges of the bounding box it moves;
+// Resize handles. Each declares which edges of the bounding box it moves;
 // corners move two edges (and support Shift aspect-lock), edges move one.
 const HANDLES = [
   { pos: "nw", cursor: "nwse-resize", edges: ["left", "top"] },
@@ -24,17 +24,21 @@ const handleOffset = (pos) => ({
   y: pos.includes("n") ? 0 : pos.includes("s") ? 100 : 50,
 })
 
-// The normalized bounding box of an element, in center-relative coords.
-const boxOf = (p) => ({
-  left: Math.min(p.startX, p.endX),
-  top: Math.min(p.startY, p.endY),
-  right: Math.max(p.startX, p.endX),
-  bottom: Math.max(p.startY, p.endY),
-})
+// Bounding box over every element's raw corners (center-relative). One element
+// is just a group of one — same math for any count.
+const boundsOf = (elements) => elements.reduce((b, el) => {
+  const { startX, startY, endX, endY } = el.properties
+  return {
+    left: Math.min(b.left, startX, endX),
+    top: Math.min(b.top, startY, endY),
+    right: Math.max(b.right, startX, endX),
+    bottom: Math.max(b.bottom, startY, endY),
+  }
+}, { left: Infinity, top: Infinity, right: -Infinity, bottom: -Infinity })
 
-// Resize a box by moving the handle's edges, clamped to MIN_SIZE so it can never
-// cross its anchor edge (no flip). Writes back normalized start/end corners.
-function resize(origin, edges, dx, dy, shift) {
+// Resize the group box by moving the handle's edges, clamped to MIN_SIZE so it
+// can never cross its anchor edge (no flip).
+function resizeBox(origin, edges, dx, dy, shift) {
   let { left, top, right, bottom } = origin
   if (edges.includes("left"))   left   = origin.left   + dx
   if (edges.includes("right"))  right  = origin.right  + dx
@@ -67,18 +71,27 @@ function resize(origin, edges, dx, dy, shift) {
   if (edges.includes("top"))    top    = Math.min(top,    bottom - MIN_SIZE)
   if (edges.includes("bottom")) bottom = Math.max(bottom, top    + MIN_SIZE)
 
-  return { startX: left, startY: top, endX: right, endY: bottom }
+  return { left, top, right, bottom }
 }
+
+// Map a raw coordinate proportionally from the old group box to the new one.
+// Mapping raw corners (no per-element min/max) preserves a line's direction.
+// A zero-size axis degenerates to translation.
+const mapCoord = (v, oldMin, oldSize, newMin, newSize) =>
+  oldSize === 0 ? v + (newMin - oldMin) : newMin + ((v - oldMin) / oldSize) * newSize
 
 // `interactive` gates all dragging: only the select tool may resize/move. While
 // the move tool (or hold-Space pan) is active the box is just a visual outline,
 // so a pan over a selected element pans instead of moving it.
-export default function SelectionBox({ element, center, updateElement, interactive }) {
-  const p = element.properties
-  const box = boxOf(p)
+export default function SelectionBox({ elements, center, updateElements, interactive }) {
+  const box = boundsOf(elements)
 
-  // Body-drag: dragging the container interior moves the whole element.
-  const bodyRef = useBodyDrag(element, updateElement, interactive)
+  // Body-drag: dragging the container interior moves the whole selection.
+  const bodyRef = useBodyDrag(elements, updateElements, interactive)
+
+  // Endpoint handles are a line-type affordance (endpoint identity is per-line,
+  // meaningless on a group), so they apply to a lone selected line only.
+  const loneLine = elements.length === 1 && elements[0].type === "line" ? elements[0] : null
 
   return (
     <div
@@ -91,58 +104,79 @@ export default function SelectionBox({ element, center, updateElement, interacti
         "--height": (box.bottom - box.top) + "px",
       }}
     >
-      {interactive && (element.type === "line"
-        ? <LineHandles element={element} updateElement={updateElement} box={box} />
-        : <BoxHandles element={element} updateElement={updateElement} />)}
+      {interactive && (loneLine
+        ? <LineHandles element={loneLine} updateElements={updateElements} box={box} />
+        : HANDLES.map((h) => (
+            <BoxHandle key={h.pos} spec={h} elements={elements} updateElements={updateElements} />
+          )))}
     </div>
   )
 }
 
-// Attaches a pointer drag to the box container that translates all four corners.
-function useBodyDrag(element, updateElement, interactive) {
+// Attaches a pointer drag to the box container that translates every selected
+// element together.
+function useBodyDrag(elements, updateElements, interactive) {
   const ref = useRef(null)
   const origin = useRef(null)
 
   usePointer(ref, {
     active: interactive,
     cursor: "move",
-    onDown: () => { origin.current = element.properties },
+    onDown: () => {
+      origin.current = elements.map(el => ({ uuid: el.uuid, ...el.properties }))
+    },
     onMove: (p) => {
       if (!p.hasDragged) return
-      const o = origin.current
       const dx = p.x - p.startX
       const dy = p.y - p.startY
-      updateElement(element.uuid, {
-        startX: o.startX + dx, startY: o.startY + dy,
-        endX: o.endX + dx, endY: o.endY + dy,
-      })
+      updateElements(origin.current.map(o => ({
+        uuid: o.uuid,
+        properties: {
+          startX: o.startX + dx, startY: o.startY + dy,
+          endX: o.endX + dx, endY: o.endY + dy,
+        }
+      })))
     },
   })
 
   return ref
 }
 
-function BoxHandles({ element, updateElement }) {
-  return HANDLES.map((h) => (
-    <BoxHandle key={h.pos} spec={h} element={element} updateElement={updateElement} />
-  ))
-}
-
-function BoxHandle({ spec, element, updateElement }) {
+// A resize handle. Dragging it resizes the group box, and every element's raw
+// corners are mapped proportionally into the new box — one code path whether
+// the selection holds one element or many.
+function BoxHandle({ spec, elements, updateElements }) {
   const ref = useRef(null)
-  const origin = useRef(null)   // normalized box snapshotted at drag start
+  const origin = useRef(null)   // group box + member corners snapshotted at drag start
   const off = handleOffset(spec.pos)
 
   usePointer(ref, {
     active: true,
     cursor: spec.cursor,
-    onDown: () => { origin.current = boxOf(element.properties) },
+    onDown: () => {
+      origin.current = {
+        box: boundsOf(elements),
+        members: elements.map(el => ({ uuid: el.uuid, ...el.properties })),
+      }
+    },
     onMove: (p) => {
       if (!p.hasDragged) return
-      updateElement(
-        element.uuid,
-        resize(origin.current, spec.edges, p.x - p.startX, p.y - p.startY, p.shiftKey)
-      )
+      const o = origin.current
+      const next = resizeBox(o.box, spec.edges, p.x - p.startX, p.y - p.startY, p.shiftKey)
+      const oldW = o.box.right - o.box.left
+      const oldH = o.box.bottom - o.box.top
+      const newW = next.right - next.left
+      const newH = next.bottom - next.top
+
+      updateElements(o.members.map(m => ({
+        uuid: m.uuid,
+        properties: {
+          startX: mapCoord(m.startX, o.box.left, oldW, next.left, newW),
+          endX:   mapCoord(m.endX,   o.box.left, oldW, next.left, newW),
+          startY: mapCoord(m.startY, o.box.top,  oldH, next.top,  newH),
+          endY:   mapCoord(m.endY,   o.box.top,  oldH, next.top,  newH),
+        }
+      })))
     },
   })
 
@@ -156,26 +190,25 @@ function BoxHandle({ spec, element, updateElement }) {
   )
 }
 
-// Lines get one handle per endpoint, dragging the endpoint directly so the
-// start→end direction (and therefore angle/arrowheads) is preserved. No
-// normalization, so endpoints never swap.
-function LineHandles({ element, updateElement, box }) {
+// A lone line gets one handle per endpoint, dragging the endpoint directly so
+// the start→end direction (and therefore angle/arrowheads) is preserved.
+function LineHandles({ element, updateElements, box }) {
   const p = element.properties
   return (
     <>
       <LineHandle
-        element={element} updateElement={updateElement} box={box}
+        element={element} updateElements={updateElements} box={box}
         keyX="startX" keyY="startY" x={p.startX} y={p.startY}
       />
       <LineHandle
-        element={element} updateElement={updateElement} box={box}
+        element={element} updateElements={updateElements} box={box}
         keyX="endX" keyY="endY" x={p.endX} y={p.endY}
       />
     </>
   )
 }
 
-function LineHandle({ element, updateElement, box, keyX, keyY, x, y }) {
+function LineHandle({ element, updateElements, box, keyX, keyY, x, y }) {
   const ref = useRef(null)
   const origin = useRef(null)
 
@@ -185,10 +218,13 @@ function LineHandle({ element, updateElement, box, keyX, keyY, x, y }) {
     onDown: () => { origin.current = { x: element.properties[keyX], y: element.properties[keyY] } },
     onMove: (p) => {
       if (!p.hasDragged) return
-      updateElement(element.uuid, {
-        [keyX]: origin.current.x + (p.x - p.startX),
-        [keyY]: origin.current.y + (p.y - p.startY),
-      })
+      updateElements([{
+        uuid: element.uuid,
+        properties: {
+          [keyX]: origin.current.x + (p.x - p.startX),
+          [keyY]: origin.current.y + (p.y - p.startY),
+        }
+      }])
     },
   })
 

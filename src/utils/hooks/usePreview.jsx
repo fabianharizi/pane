@@ -41,7 +41,7 @@ export default function usePreview(){
           />
         
         case "select":
-          return <Shape 
+          return <Shape
             type={"rectangle"}
             properties={{
               startX: startX,
@@ -51,21 +51,6 @@ export default function usePreview(){
               fill: "#0088aa20",
               strokeColor: "#0088aaaa",
               strokeWidth: 2,
-              strokeStyle: "dashed"
-            }}
-          />
-        
-        case "selected":
-          return <Shape 
-            type={"selected"}
-            properties={{
-              startX: startX - 5,
-              startY: startY - 5,
-              endX: endX + 5,
-              endY: endY + 5,
-              fill: "transparent",
-              strokeColor: "#0088aa",
-              strokeWidth: 1,
               strokeStyle: "dashed"
             }}
           />

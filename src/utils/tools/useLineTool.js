@@ -5,7 +5,7 @@ import UUID from '../methods/UUID'
 // This hook is used to implement the "Line" tool. 
 // It needs a condition to be active
 
-export default function useLineTool(ref, active, enablePreview, disablePreview, addElement, setActiveTool) {
+export default function useLineTool(ref, active, enablePreview, disablePreview, addElements, setActiveTool) {
   const boardPos = useRef({
     x: 0, 
     y: 0,
@@ -47,10 +47,10 @@ export default function useLineTool(ref, active, enablePreview, disablePreview, 
                 : p.startY + boardPos.current.y - boardPos.current.centerY, 
       }
       
-      addElement(
-        "line", 
-        UUID.generate("line"),
-        {
+      addElements([{
+        type: "line",
+        uuid: UUID.generate("line"),
+        properties: {
           ...coords,
           strokeColor: "#ffffff",
           strokeWidth: 2,
@@ -58,7 +58,7 @@ export default function useLineTool(ref, active, enablePreview, disablePreview, 
           headStart: "none",
           headEnd: "arrow"
         }
-      )
+      }])
       disablePreview()
       setActiveTool("select")
     }

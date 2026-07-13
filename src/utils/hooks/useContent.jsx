@@ -1,64 +1,67 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import Shape from '../../components/Shape/Shape';
 import Line from '../../components/Line/Line';
 import Text from "../../components/Text/Text";
-import UUID from "../methods/UUID";
 
-// This hook is used to keep track of the contents of the canvas
+// This hook is used to keep track of the contents of the canvas.
+// Selection is uniformly MULTI: `selectedElements` is an array of uuids and
+// every operation takes an array — a single element is just a selection of
+// length 1. There are deliberately no singular variants.
 
 export default function useContent(start){
   const [content, setContent] = useState(start)
-  const [selectedElement, setSelectedElement] = useState(null)
-  const [copied, setCopied] = useState()
+  const [selectedElements, setSelectedElements] = useState([])
 
   const hasElement = (uuid) => content.some(el => el.uuid === uuid);
 
   const getElement = (uuid) => content.find(el => el.uuid === uuid);
 
-  // Adding an element selects it (and deselects the rest), so a freshly drawn
-  // shape/line/text is immediately the active selection.
-  const addElement = (type, uuid, properties) => {
+  // Appends elements and selects exactly them — a draw or a paste becomes the
+  // active selection. Takes [{ type, uuid, properties }].
+  const addElements = (list) => {
     setContent(prev => ([
       ...prev.map(el => ({ ...el, selected: false })),
-      {
-        type: type,
-        uuid: uuid,
+      ...list.map(e => ({
+        type: e.type,
+        uuid: e.uuid,
         selected: true,
-        properties: properties
-      }
+        properties: e.properties
+      }))
     ]))
-    setSelectedElement(uuid)
+    setSelectedElements(list.map(e => e.uuid))
   }
 
-  // Single-select. Any id that doesn't match an element (e.g. `null` from a click
-  // on empty canvas) deselects everything.
-  const selectElement = (uuid) => {
-    const exists = hasElement(uuid);
+  // Selects exactly the given uuids (unknown ids are dropped). An empty or
+  // absent list deselects everything.
+  const selectElements = (uuids) => {
+    const valid = (uuids ?? []).filter(hasElement);
 
-    setSelectedElement(exists ? uuid : null)
+    setSelectedElements(valid)
     setContent(prev => prev.map((el) => ({
       ...el,
-      selected: exists && el.uuid === uuid
+      selected: valid.includes(el.uuid)
     })))
   }
 
-  const updateElement = (uuid, properties) => {
-    if (!hasElement(uuid)) return;
-
-    setContent(prev => prev.map(el =>
-      el.uuid === uuid
-        ? { ...el, properties: { ...el.properties, ...properties } }
+  // Merges per-element property patches in one state pass.
+  // Takes [{ uuid, properties }].
+  const updateElements = (patches) => {
+    setContent(prev => prev.map(el => {
+      const patch = patches.find(pt => pt.uuid === el.uuid)
+      return patch
+        ? { ...el, properties: { ...el.properties, ...patch.properties } }
         : el
-    ))
+    }))
   }
 
-  const deleteElement = (uuid) => {
-    setContent(prev => prev.filter(el => el.uuid !== uuid));
-    setSelectedElement(prev => (prev === uuid ? null : prev));
+  const deleteElements = (uuids) => {
+    setContent(prev => prev.filter(el => !uuids.includes(el.uuid)));
+    setSelectedElements(prev => prev.filter(id => !uuids.includes(id)));
   }
 
   const clearContent = () => {
     setContent([])
+    setSelectedElements([])
   }
 
   const encodeContent = (content, centerX, centerY) => {
@@ -105,13 +108,13 @@ export default function useContent(start){
 
   return {
     "content": content,
-    "selectedElement": selectedElement,
+    "selectedElements": selectedElements,
     "hasElement": hasElement,
     "getElement": getElement,
-    "addElement": addElement,
-    "selectElement": selectElement,
-    "updateElement": updateElement,
-    "deleteElement": deleteElement,
+    "addElements": addElements,
+    "selectElements": selectElements,
+    "updateElements": updateElements,
+    "deleteElements": deleteElements,
     "clearContent": clearContent,
     "encodeContent": encodeContent
   };

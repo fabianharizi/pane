@@ -258,10 +258,11 @@ function Field({ name, properties, onPatch }) {
   }
 }
 
-export default function Properties({ selectedElement, getElement, updateElement }) {
-  const element = selectedElement ? getElement(selectedElement) : undefined
+export default function Properties({ selectedElements, getElement, updateElements }) {
+  // The panel edits exactly one element. Multi-editing needs mixed-value
+  // handling (a later feature), so it stays closed for 0 or 2+ selected.
+  const element = selectedElements.length === 1 ? getElement(selectedElements[0]) : undefined
 
-  // Nothing selected (or the selected element no longer exists) — panel stays closed.
   if (!element) return null
 
   const fields = SCHEMA[element.type] ?? []
@@ -285,7 +286,7 @@ export default function Properties({ selectedElement, getElement, updateElement 
               <Field
                 name={name}
                 properties={element.properties}
-                onPatch={(patch) => updateElement(element.uuid, patch)}
+                onPatch={(patch) => updateElements([{ uuid: element.uuid, properties: patch }])}
               />
             </Row>
           )

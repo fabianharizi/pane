@@ -5,7 +5,7 @@ import UUID from '../methods/UUID'
 // This hook is used to implement the "Shape" tool. 
 // It needs a condition to be active
 
-export default function useShapeTool(ref, active, shape, enablePreview, disablePreview, addElement, setActiveTool) {
+export default function useShapeTool(ref, active, shape, enablePreview, disablePreview, addElements, setActiveTool) {
   const boardPos = useRef({
     x: 0, 
     y: 0,
@@ -46,10 +46,10 @@ export default function useShapeTool(ref, active, shape, enablePreview, disableP
                 : p.startY + boardPos.current.y - boardPos.current.centerY + 100, 
       }
 
-      addElement(
-        shape, 
-        UUID.generate(shape.slice(0, 4)),
-        {
+      addElements([{
+        type: shape,
+        uuid: UUID.generate(shape.slice(0, 4)),
+        properties: {
           ...coords,
           fill: "transparent",
           strokeColor: "#ffffff",
@@ -58,7 +58,7 @@ export default function useShapeTool(ref, active, shape, enablePreview, disableP
           borderRadius: 0,
           opacity: 1
         }
-      )
+      }])
       disablePreview()
       setActiveTool("select")
     }

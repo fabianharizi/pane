@@ -5,7 +5,7 @@ import UUID from '../methods/UUID'
 // This hook is used to implement the "Shape" tool. 
 // It needs a condition to be active
 
-export default function useTextTool(ref, active, enablePreview, disablePreview, addElement, setActiveTool) {
+export default function useTextTool(ref, active, enablePreview, disablePreview, addElements, setActiveTool) {
   const boardPos = useRef({
     x: 0, 
     y: 0,
@@ -47,14 +47,14 @@ export default function useTextTool(ref, active, enablePreview, disablePreview, 
                 : p.startY + boardPos.current.y - boardPos.current.centerY + 50, 
       }
 
-      addElement(
-        "text", 
-        UUID.generate("text"),
-        {
+      addElements([{
+        type: "text",
+        uuid: UUID.generate("text"),
+        properties: {
           ...coords,
           content: "Lorem ipsum dolor sit amet"
         }
-      )
+      }])
       disablePreview()
       setActiveTool("select")
     }
