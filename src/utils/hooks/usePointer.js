@@ -139,6 +139,21 @@ export default function usePointer(ref, callback) {
     }, setCursor);
   };
 
+  const handleDblClick = (e) => {
+    if (!latestCallback.current.active) return;
+
+    e.stopPropagation();
+    if (pointer.current.hasDragged) return;
+
+    latestCallback.current.onDblClick?.(
+      pointer.current = {
+        ...pointer.current,
+        x: e.clientX,
+        y: e.clientY,
+    }, setCursor);
+  };
+
+
   useEffect(() => {
     if (!latestCallback.current.active) return;
 
@@ -152,6 +167,7 @@ export default function usePointer(ref, callback) {
     element.addEventListener('pointercancel', handleCancel);
     element.addEventListener('lostpointercapture', handleLostCapture);
     element.addEventListener('click', handleClick);
+    element.addEventListener('dblclick', handleDblClick);
 
     return () => {
       pointer.current.isDown = false;
@@ -163,6 +179,7 @@ export default function usePointer(ref, callback) {
       element.removeEventListener('pointercancel', handleCancel);
       element.removeEventListener('lostpointercapture', handleLostCapture);
       element.removeEventListener('click', handleClick);
+      element.removeEventListener('dblclick', handleDblClick);
     };
 
   }, [callback.active])
