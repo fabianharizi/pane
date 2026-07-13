@@ -34,7 +34,10 @@ export default function App(){
   useSelectTool(
     boardRef, 
     activeTool === 'select', 
-    selectElement
+    content,
+    selectElement,
+    enablePreview,
+    disablePreview
   )
   useMoveTool(
     boardRef, 

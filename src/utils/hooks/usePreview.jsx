@@ -39,6 +39,21 @@ export default function usePreview(){
               headEnd: "none",
             }}
           />
+        
+        case "select":
+          return <Shape 
+            type={type}
+            properties={{
+              startX: startX,
+              startY: startY,
+              endX: endX,
+              endY: endY,
+              fill: "#0088aa20",
+              strokeColor: "#0088aaaa",
+              strokeWidth: 2,
+              strokeStyle: "dashed"
+            }}
+          />
       }}
     )
   }
