@@ -34,7 +34,8 @@ export default function Shape({
     <div className={
       styles.shape + " " +(
       (type == "rectangle") ? styles.rectangle : 
-      (type == "oval") ? styles.oval : ""
+      (type == "oval") ? styles.oval : 
+      (type == "selected") ? styles.selected : ""
     )} data-uuid={uuid} data-selected={selected} style={{
       "--x": coords.x + "px",
       "--y": coords.y + "px",

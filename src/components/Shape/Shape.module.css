@@ -18,3 +18,49 @@
 .oval{
   border-radius: 100%;
 }
+
+.selected{
+  border: 0;
+  opacity: var(--opacity);
+}
+
+/* Selected: marching-ants outline that rotates clockwise around the element.
+   Drawn on an overlay so it never disturbs the shape's own fill/stroke. */
+.selected::after{
+  --ant: var(--strokeColor);
+  --dash: calc(var(--strokeWidth) * 6);               /* one dash period: 4px mark + 4px gap */
+
+  content: "";
+  position: absolute;
+  inset: -2px;
+  pointer-events: none;
+
+  /* One dashed track per edge (top, bottom, left, right). */
+  background-image:
+    linear-gradient(90deg, var(--ant) 50%, transparent 0),
+    linear-gradient(90deg, var(--ant) 50%, transparent 0),
+    linear-gradient(0deg,  var(--ant) 50%, transparent 0),
+    linear-gradient(0deg,  var(--ant) 50%, transparent 0);
+  background-repeat: repeat-x, repeat-x, repeat-y, repeat-y;
+  background-size: var(--dash) var(--strokeWidth), var(--dash) var(--strokeWidth), var(--strokeWidth) var(--dash), var(--strokeWidth) var(--dash);
+  background-position: 0 0, 0 100%, 0 0, 100% 0;
+
+  animation: march 0.5s linear infinite;
+}
+
+/* Shift each edge by exactly one dash period → seamless loop; opposite edges
+   move opposite ways so the dashes circulate (top→right, right→down, ...). */
+@keyframes march{
+  to{
+    background-position:
+      var(--dash) 0,                 /* top:    →  */
+      calc(-1 * var(--dash)) 100%,   /* bottom: ←  */
+      0 calc(-1 * var(--dash)),      /* left:   ↑  */
+      100% var(--dash);              /* right:  ↓  */
+  }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .selected::after{ animation: none; }
+}
+

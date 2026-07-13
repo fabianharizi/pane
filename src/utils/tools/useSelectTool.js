@@ -53,24 +53,47 @@ export default function useSelectTool(ref, active, content, selectElement, enabl
         height: Math.abs(ey - sy),
       }
 
-      // Every uuid whose bounding box overlaps the selection rect (partial or full).
-      const selectedElements = content
-        .filter(el => {
+      // Elements whose bounding box overlaps the selection rect (partial or full).
+      const selected = content.filter(el => {
+        const { startX, startY, endX, endY } = el.properties;
+        const left = Math.min(startX, endX);
+        const top = Math.min(startY, endY);
+        const right = Math.max(startX, endX);
+        const bottom = Math.max(startY, endY);
+
+        // AABB overlap: the two boxes intersect on both axes.
+        return left < coords.x + coords.width
+          && right > coords.x
+          && top < coords.y + coords.height
+          && bottom > coords.y;
+      });
+
+      const selectedElements = selected.map(el => el.uuid);
+
+      if (selectedElements.length >= 2) {
+        // Group bounding box: outermost corners across all selected elements
+        // (center-relative). Fold both corners of each element into the running min/max.
+        const bounds = selected.reduce((b, el) => {
           const { startX, startY, endX, endY } = el.properties;
-          const left = Math.min(startX, endX);
-          const top = Math.min(startY, endY);
-          const right = Math.max(startX, endX);
-          const bottom = Math.max(startY, endY);
+          return {
+            left: Math.min(b.left, startX, endX),
+            top: Math.min(b.top, startY, endY),
+            right: Math.max(b.right, startX, endX),
+            bottom: Math.max(b.bottom, startY, endY),
+          };
+        }, { left: Infinity, top: Infinity, right: -Infinity, bottom: -Infinity });
 
-          // AABB overlap: the two boxes intersect on both axes.
-          return left < coords.x + coords.width
-            && right > coords.x
-            && top < coords.y + coords.height
-            && bottom > coords.y;
-        })
-        .map(el => el.uuid);
-
-      console.log(selectedElements); // TODO: apply multi-selection once the model supports it
+        // Preview is fed ABSOLUTE canvas coords → add the center back (like onMove).
+        enablePreview(
+          "selected",
+          bounds.left + boardPos.current.centerX,
+          bounds.top + boardPos.current.centerY,
+          bounds.right + boardPos.current.centerX,
+          bounds.bottom + boardPos.current.centerY,
+        );
+      } else if (selectedElements.length == 1){
+        selectElement(selectedElements[0])
+      }
     },
     onClick: (p, setCursor) => {
       const el = p.target?.closest('[data-uuid]');
