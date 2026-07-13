@@ -9,6 +9,7 @@ import UUID from "../methods/UUID";
 export default function useContent(start){
   const [content, setContent] = useState(start)
   const [selectedElement, setSelectedElement] = useState(null)
+  const [copied, setCopied] = useState()
 
   const hasElement = (uuid) => content.some(el => el.uuid === uuid);
 
@@ -49,6 +50,11 @@ export default function useContent(start){
         ? { ...el, properties: { ...el.properties, ...properties } }
         : el
     ))
+  }
+
+  const deleteElement = (uuid) => {
+    setContent(prev => prev.filter(el => el.uuid !== uuid));
+    setSelectedElement(prev => (prev === uuid ? null : prev));
   }
 
   const clearContent = () => {
@@ -105,6 +111,7 @@ export default function useContent(start){
     "addElement": addElement,
     "selectElement": selectElement,
     "updateElement": updateElement,
+    "deleteElement": deleteElement,
     "clearContent": clearContent,
     "encodeContent": encodeContent
   };
