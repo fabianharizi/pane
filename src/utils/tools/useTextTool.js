@@ -34,7 +34,8 @@ export default function useTextTool(ref, active, toWorld, enablePreview, disable
         uuid: UUID.generate("text"),
         properties: {
           ...coords,
-          content: "Lorem ipsum dolor sit amet"
+          content: "Lorem ipsum dolor sit amet",
+          rotation: 0
         }
       }])
       disablePreview()

@@ -113,6 +113,7 @@ export default function App(){
           boardRef={boardRef}
           content={content}
           camera={camera}
+          toWorld={toWorld}
           preview={preview}
           selectedElements={selectedElements}
           getElement={getElement}

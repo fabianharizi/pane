@@ -7,6 +7,7 @@ export default function Text({
 
   const p = {
     content: "Lorem ipsum dolor sit amet",
+    rotation: 0,
     ...properties
   }
 
@@ -22,7 +23,8 @@ export default function Text({
         "--x": coords.x + "px",
         "--y": coords.y + "px",
         "--width": (coords.width > 10) ? coords.width + "px" : "min-content",
-        "--height":(coords.height > 10) ?  coords.height + "px" : "min-content"
+        "--height":(coords.height > 10) ?  coords.height + "px" : "min-content",
+        "--rotation": p.rotation + "deg"
       }}>{p.content}</div>
   )
 }

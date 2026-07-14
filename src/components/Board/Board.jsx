@@ -7,7 +7,7 @@ import Preview from '../Preview/Preview'
 // and receives all pointer/wheel input. The world div inside it is translated
 // and scaled by the camera; its children are positioned in world coordinates.
 
-export default function Board({boardRef, content, camera, preview, selectedElements, getElement, updateElements, selectionInteractive}){
+export default function Board({boardRef, content, camera, toWorld, preview, selectedElements, getElement, updateElements, selectionInteractive}){
   const { encodeContent } = useContent([])
 
   return (
@@ -26,6 +26,7 @@ export default function Board({boardRef, content, camera, preview, selectedEleme
         {selectedElements.length > 0 && <SelectionBox
           elements={selectedElements.map(getElement).filter(Boolean)}
           zoom={camera.zoom}
+          toWorld={toWorld}
           updateElements={updateElements}
           interactive={selectionInteractive}
         />}

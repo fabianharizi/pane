@@ -21,6 +21,7 @@ export default function Shape({
     strokeStyle: "solid",
     borderRadius: 0,
     opacity: 1,
+    rotation: 0,
     ...properties
   }
 
@@ -46,7 +47,8 @@ export default function Shape({
       "--strokeWidth": p.strokeWidth + "px",
       "--strokeStyle": p.strokeStyle,
       "--borderRadius": p.borderRadius + "px",
-      "--opacity": p.opacity
+      "--opacity": p.opacity,
+      "--rotation": p.rotation + "deg"
     }}></div>
   )
 }

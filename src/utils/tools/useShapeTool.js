@@ -39,7 +39,8 @@ export default function useShapeTool(ref, active, shape, toWorld, enablePreview,
           strokeWidth: 2,
           strokeStyle: "solid",
           borderRadius: 0,
-          opacity: 1
+          opacity: 1,
+          rotation: 0
         }
       }])
       disablePreview()

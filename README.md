@@ -20,6 +20,7 @@ Core whiteboard interactions work end-to-end: drawing (rectangle, oval, line, te
 - **Move tool** — click-drag to pan; hold **Space** from any tool to pan momentarily
 - **Select tool** — click an element to select it; drag a marquee to select everything it touches; click empty canvas to deselect
 - **Multi-select group box** — one selection box around any number of elements: drag the body to move them all, drag handles to scale them proportionally (Shift locks aspect), a lone line gets endpoint handles instead
+- **Rotation** — drag the dot above the selection to rotate; Shift snaps to 15°. Shapes and text store a `rotation` (shown in the panel, editable); rotating a group turns everything about the group center — lines included, via their endpoints
 - **Drawing tools** — rectangle, oval, line, text; live dashed ghost preview; a plain click drops a default-sized element; a fresh draw is auto-selected and the tool returns to Select
 - **Properties panel** — edits the selected element's geometry and style live (position/size, fill & stroke with on/off toggles, stroke width/style, corner radius, opacity, text) — shown when exactly one element is selected
 - **Copy / paste / delete** — `Ctrl+C` / `Ctrl+V` (pastes the whole group, offset, and selects it), `Delete`/`Backspace` removes the selection
@@ -78,7 +79,7 @@ Shared drawing lifecycle: `onDown` snapshots `toWorld(pointer)` as the anchor; `
 
 ### Selection
 
-`SelectionBox` renders **once for the whole selection** — one code path for any count (the group box of one element is that element's box). It's controlled: reads `properties`, writes `updateElements`. Body-drag translates all members; handles resize the group box and map every member's raw corners proportionally into it (raw mapping preserves line direction; one element behaves exactly like classic resize). Handles counter-scale (`1/zoom`) and drag deltas divide by zoom, so the feel is identical at any zoom. All dragging is gated to the Select tool, so panning over a selection pans.
+`SelectionBox` renders **once for the whole selection** — one code path for any count (the group box of one element is that element's box). It's controlled: reads `properties`, writes `updateElements`. Body-drag translates all members; handles resize the group box and map every member's raw corners proportionally into it (raw mapping preserves line direction; one element behaves exactly like classic resize). The **rotate dot** above the box turns the selection about the group center: shapes/text accumulate their `rotation` property, lines rotate via their endpoints, Shift snaps to 15°; a lone rotated element rotates its selection chrome too, and resizing it works along its own axes. Handles counter-scale (`1/zoom`) and drag deltas divide by zoom, so the feel is identical at any zoom. All dragging is gated to the Select tool, so panning over a selection pans.
 
 `Properties` receives the same `selectedElements` array and shows itself only when exactly one element is selected.
 
@@ -140,8 +141,9 @@ npm run lint     # eslint
 - [ ] Editable text content (double-click to edit; needs synthesized dblclick)
 - [ ] Undo / redo
 - [ ] Line arrowheads (`headStart`/`headEnd` stored, not yet rendered)
+- [x] Rotation (handle + property, group rotation, 15° Shift snap)
 - [ ] Multi-edit in the Properties panel (shared fields, mixed values)
-- [ ] Rotation handles
+- [ ] Rotation-aware selection bounds & marquee (currently use unrotated footprints)
 - [ ] Touch pinch-zoom (trackpad pinch already works)
 - [ ] Layers panel (array order already is z-order)
 - [ ] Tool-key constants module, TypeScript migration

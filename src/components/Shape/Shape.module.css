@@ -5,6 +5,8 @@
   width: var(--width);
   height: var(--height);
 
+  /* Rotation is about the element's center (default transform-origin). */
+  rotate: var(--rotation, 0deg);
 
   background-color: var(--fill);
   border: var(--strokeWidth) var(--strokeStyle) var(--strokeColor);

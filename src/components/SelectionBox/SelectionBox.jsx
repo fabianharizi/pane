@@ -25,8 +25,9 @@ const handleOffset = (pos) => ({
   y: pos.includes("n") ? 0 : pos.includes("s") ? 100 : 50,
 })
 
-// Bounding box over every element's raw corners (center-relative). One element
-// is just a group of one — same math for any count.
+// Bounding box over every element's raw corners (world coords). One element is
+// just a group of one — same math for any count. NOTE: deliberately ignores
+// per-element rotation (uses the unrotated footprint) — see CLAUDE.md.
 const boundsOf = (elements) => elements.reduce((b, el) => {
   const { startX, startY, endX, endY } = el.properties
   return {
@@ -36,6 +37,22 @@ const boundsOf = (elements) => elements.reduce((b, el) => {
     bottom: Math.max(b.bottom, startY, endY),
   }
 }, { left: Infinity, top: Infinity, right: -Infinity, bottom: -Infinity })
+
+// Angle helpers. Rotation is stored in degrees, about the element center.
+const rad = (d) => d * Math.PI / 180
+const deg = (r) => r * 180 / Math.PI
+const snap15 = (d) => Math.round(d / 15) * 15
+
+// Rotate point p about center c by `degrees`.
+const rotatePoint = (p, c, degrees) => {
+  const a = rad(degrees)
+  const dx = p.x - c.x
+  const dy = p.y - c.y
+  return {
+    x: c.x + dx * Math.cos(a) - dy * Math.sin(a),
+    y: c.y + dx * Math.sin(a) + dy * Math.cos(a),
+  }
+}
 
 // Resize the group box by moving the handle's edges, clamped to minSize (world
 // units) so it can never cross its anchor edge (no flip).
@@ -81,12 +98,10 @@ function resizeBox(origin, edges, dx, dy, shift, minSize) {
 const mapCoord = (v, oldMin, oldSize, newMin, newSize) =>
   oldSize === 0 ? v + (newMin - oldMin) : newMin + ((v - oldMin) / oldSize) * newSize
 
-// `interactive` gates all dragging: only the select tool may resize/move. While
-// the move tool (or hold-Space pan) is active the box is just a visual outline,
-// so a pan over a selected element pans instead of moving it.
-// `zoom` converts pointer deltas (screen px) into world units — every drag here
-// divides by it — and counter-scales the handles via CSS.
-export default function SelectionBox({ elements, zoom, updateElements, interactive }) {
+// `interactive` gates all dragging: only the select tool may resize/move/rotate.
+// `zoom` converts pointer deltas (screen px) into world units; `toWorld` converts
+// absolute pointer positions (needed for rotation angles).
+export default function SelectionBox({ elements, zoom, toWorld, updateElements, interactive }) {
   const box = boundsOf(elements)
 
   // Body-drag: dragging the container interior moves the whole selection.
@@ -95,6 +110,10 @@ export default function SelectionBox({ elements, zoom, updateElements, interacti
   // Endpoint handles are a line-type affordance (endpoint identity is per-line,
   // meaningless on a group), so they apply to a lone selected line only.
   const loneLine = elements.length === 1 && elements[0].type === "line" ? elements[0] : null
+
+  // A lone box element rotates the whole chrome with it, so resize handles work
+  // in the element's local frame. Groups keep an axis-aligned box (rotation 0).
+  const rotation = !loneLine && elements.length === 1 ? (elements[0].properties.rotation ?? 0) : 0
 
   return (
     <div
@@ -105,19 +124,24 @@ export default function SelectionBox({ elements, zoom, updateElements, interacti
         "--y": box.top + "px",
         "--width": (box.right - box.left) + "px",
         "--height": (box.bottom - box.top) + "px",
+        "--rotation": rotation + "deg",
       }}
     >
       {interactive && (loneLine
         ? <LineHandles element={loneLine} zoom={zoom} updateElements={updateElements} box={box} />
-        : HANDLES.map((h) => (
-            <BoxHandle key={h.pos} spec={h} elements={elements} zoom={zoom} updateElements={updateElements} />
-          )))}
+        : <>
+            {HANDLES.map((h) => (
+              <BoxHandle key={h.pos} spec={h} elements={elements} zoom={zoom} rotation={rotation} updateElements={updateElements} />
+            ))}
+            <RotateHandle elements={elements} toWorld={toWorld} updateElements={updateElements} />
+          </>)}
     </div>
   )
 }
 
 // Attaches a pointer drag to the box container that translates every selected
 // element together. Pointer deltas are screen px → divide by zoom for world.
+// Translation is rotation-independent, so rotated chrome needs no special case.
 function useBodyDrag(elements, zoom, updateElements, interactive) {
   const ref = useRef(null)
   const origin = useRef(null)
@@ -148,7 +172,7 @@ function useBodyDrag(elements, zoom, updateElements, interactive) {
 // A resize handle. Dragging it resizes the group box, and every element's raw
 // corners are mapped proportionally into the new box — one code path whether
 // the selection holds one element or many.
-function BoxHandle({ spec, elements, zoom, updateElements }) {
+function BoxHandle({ spec, elements, zoom, rotation, updateElements }) {
   const ref = useRef(null)
   const origin = useRef(null)   // group box + member corners snapshotted at drag start
   const off = handleOffset(spec.pos)
@@ -160,14 +184,45 @@ function BoxHandle({ spec, elements, zoom, updateElements }) {
       origin.current = {
         box: boundsOf(elements),
         members: elements.map(el => ({ uuid: el.uuid, ...el.properties })),
+        rotation,
       }
     },
     onMove: (p) => {
       if (!p.hasDragged) return
       const o = origin.current
-      // Screen deltas → world; the minimum size is likewise a constant 10
-      // SCREEN px, so it feels the same at any zoom.
-      const next = resizeBox(o.box, spec.edges, (p.x - p.startX) / zoom, (p.y - p.startY) / zoom, p.shiftKey, MIN_SIZE / zoom)
+
+      // Screen deltas → world. For a rotated lone element the handles live in
+      // the element's rotated (local) frame, so rotate the delta back by
+      // −rotation before applying it to the local box edges.
+      let dx = (p.x - p.startX) / zoom
+      let dy = (p.y - p.startY) / zoom
+      if (o.rotation) {
+        const a = rad(-o.rotation)
+        const rx = dx * Math.cos(a) - dy * Math.sin(a)
+        const ry = dx * Math.sin(a) + dy * Math.cos(a)
+        dx = rx
+        dy = ry
+      }
+
+      // The minimum size is a constant 10 SCREEN px at any zoom.
+      let next = resizeBox(o.box, spec.edges, dx, dy, p.shiftKey, MIN_SIZE / zoom)
+
+      // Rotation pivots about the element CENTER, and resizing moves the center
+      // — which would silently swing the anchored corner through the rotation.
+      // Compensate: translate the new box so the anchor stays fixed in world
+      // space (anchor world drift = Δcenter − R(rotation)·Δcenter).
+      if (o.rotation) {
+        const a = rad(o.rotation)
+        const dcx = (next.left + next.right) / 2 - (o.box.left + o.box.right) / 2
+        const dcy = (next.top + next.bottom) / 2 - (o.box.top + o.box.bottom) / 2
+        const driftX = dcx - (dcx * Math.cos(a) - dcy * Math.sin(a))
+        const driftY = dcy - (dcx * Math.sin(a) + dcy * Math.cos(a))
+        next = {
+          left: next.left - driftX, right: next.right - driftX,
+          top: next.top - driftY, bottom: next.bottom - driftY,
+        }
+      }
+
       const oldW = o.box.right - o.box.left
       const oldH = o.box.bottom - o.box.top
       const newW = next.right - next.left
@@ -193,6 +248,71 @@ function BoxHandle({ spec, elements, zoom, updateElements }) {
       style={{ "--hx": off.x + "%", "--hy": off.y + "%" }}
     />
   )
+}
+
+// The rotate handle (dot above the top edge). Dragging it rotates the whole
+// selection about the group center — one code path for any count: a single box
+// element's group center IS its own center, so only its `rotation` changes.
+// Box members orbit the center (corners translate, size intact) and accumulate
+// `rotation`; line members have no rotation property — their endpoints rotate,
+// which IS their rotation. Shift snaps to 15°: a single element snaps its
+// resulting angle, a group snaps the drag delta (a group has no single angle).
+function RotateHandle({ elements, toWorld, updateElements }) {
+  const ref = useRef(null)
+  const origin = useRef(null)
+
+  usePointer(ref, {
+    active: true,
+    cursor: "grab",
+    onDown: (p) => {
+      const box = boundsOf(elements)
+      const center = { x: (box.left + box.right) / 2, y: (box.top + box.bottom) / 2 }
+      const pw = toWorld(p.x, p.y)
+      origin.current = {
+        center,
+        startAngle: deg(Math.atan2(pw.y - center.y, pw.x - center.x)),
+        members: elements.map(el => ({ uuid: el.uuid, type: el.type, ...el.properties })),
+        single: elements.length === 1 && elements[0].type !== "line",
+      }
+    },
+    onMove: (p) => {
+      if (!p.hasDragged) return
+      const o = origin.current
+      const pw = toWorld(p.x, p.y)
+      let delta = deg(Math.atan2(pw.y - o.center.y, pw.x - o.center.x)) - o.startAngle
+
+      if (p.shiftKey) {
+        delta = o.single
+          ? snap15((o.members[0].rotation ?? 0) + delta) - (o.members[0].rotation ?? 0)
+          : snap15(delta)
+      }
+
+      updateElements(o.members.map(m => {
+        if (m.type === "line") {
+          const s = rotatePoint({ x: m.startX, y: m.startY }, o.center, delta)
+          const e = rotatePoint({ x: m.endX, y: m.endY }, o.center, delta)
+          return { uuid: m.uuid, properties: { startX: s.x, startY: s.y, endX: e.x, endY: e.y } }
+        }
+
+        // Box member: its center orbits the group center; its size is intact.
+        const c = { x: (m.startX + m.endX) / 2, y: (m.startY + m.endY) / 2 }
+        const c2 = rotatePoint(c, o.center, delta)
+        const dx = c2.x - c.x
+        const dy = c2.y - c.y
+        return {
+          uuid: m.uuid,
+          properties: {
+            startX: m.startX + dx, startY: m.startY + dy,
+            endX: m.endX + dx, endY: m.endY + dy,
+            // Whole degrees: plenty for hand-rotation, keeps the panel readable.
+            rotation: Math.round((m.rotation ?? 0) + delta),
+          }
+        }
+      }))
+    },
+  })
+
+  return <span className={styles.rotateHandle} ref={ref} data-handle="rotate" />
 }
 
 // A lone line gets one handle per endpoint, dragging the endpoint directly so

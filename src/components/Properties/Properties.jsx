@@ -11,10 +11,10 @@ import styles from "./Properties.module.css"
 // derived position/size box; lines expose their raw endpoints, because a line's
 // direction is meaningful (Line.jsx derives its angle from start→end).
 const SCHEMA = {
-  rectangle: ["position", "size", "fill", "strokeColor", "strokeWidth", "strokeStyle", "borderRadius", "opacity"],
-  oval:      ["position", "size", "fill", "strokeColor", "strokeWidth", "strokeStyle", "opacity"],
+  rectangle: ["position", "size", "rotation", "fill", "strokeColor", "strokeWidth", "strokeStyle", "borderRadius", "opacity"],
+  oval:      ["position", "size", "rotation", "fill", "strokeColor", "strokeWidth", "strokeStyle", "opacity"],
   line:      ["start", "end", "strokeColor", "strokeWidth", "strokeStyle"],
-  text:      ["position", "size", "content"],
+  text:      ["position", "size", "rotation", "content"],
 }
 
 // Mirrors the per-component defaults, so an absent property still shows a value.
@@ -25,6 +25,7 @@ const DEFAULTS = {
   strokeStyle: "solid",
   borderRadius: 0,
   opacity: 1,
+  rotation: 0,
   content: "",
 }
 
@@ -88,6 +89,7 @@ const FIELDS = {
   strokeColor:  { label: "Stroke",        type: "color", nullable: true },
   strokeWidth:  { label: "Stroke width",  type: "number", min: 0, max: 50,  step: 1 },
   strokeStyle:  { label: "Stroke style",  type: "select", options: ["solid", "dashed", "dotted"] },
+  rotation:     { label: "Rotation",      type: "number", step: 1 },
   borderRadius: { label: "Corner radius", type: "number", min: 0, max: 500, step: 1 },
   opacity:      { label: "Opacity",       type: "range",  min: 0, max: 1,   step: 0.05 },
   content:      { label: "Text",          type: "textarea" },

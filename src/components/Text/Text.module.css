@@ -5,6 +5,9 @@
   width: var(--width);
   height: var(--height);
   color: #fff;
+
+  /* Rotation is about the element's center (default transform-origin). */
+  rotate: var(--rotation, 0deg);
 }
 
 /* .text:focus{

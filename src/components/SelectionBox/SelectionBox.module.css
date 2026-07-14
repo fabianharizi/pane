@@ -8,6 +8,10 @@
      (inherited from .board) keeps the outline 1 SCREEN px at any zoom. */
   border: calc(1px / var(--cam-zoom)) solid #6c6cff;
 
+  /* A lone box element rotates the whole chrome with it (about the center,
+     matching the element's own pivot). Groups render with 0deg. */
+  rotate: var(--rotation, 0deg);
+
   /* Non-interactive (e.g. while panning): just an outline, clicks pass through. */
   pointer-events: none;
 }
@@ -54,9 +58,29 @@
   pointer-events: auto;
 }
 
+/* Rotation handle: a dot floating above the top edge at a constant screen
+   offset. It rotates with the chrome for a lone rotated element. */
+.rotateHandle{
+  position: absolute;
+  left: 50%;
+  top: calc(-18px / var(--cam-zoom));
+  transform: translate(-50%, -50%) scale(calc(1 / var(--cam-zoom)));
+
+  width: 10px;
+  height: 10px;
+  box-sizing: border-box;
+  background-color: #6c6cff;
+  border: 1px solid #fff;
+  border-radius: 50%;
+
+  cursor: grab;
+  pointer-events: auto;
+}
+
 /* Enlarged invisible hit area so the small handles are easy to grab */
 .handle::before,
-.endpoint::before{
+.endpoint::before,
+.rotateHandle::before{
   content: "";
   position: absolute;
   inset: -5px;
