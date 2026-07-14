@@ -48,7 +48,7 @@ Core whiteboard interactions work end-to-end: drawing (rectangle, oval, line, te
 
 **`useCamera(boardRef)` → `{ camera, cameraRef, panBy, zoomAt, zoomTo, toWorld }`** — see above.
 
-**`usePreview()` → `{ preview, enablePreview, disablePreview }`** — the drag ghost (dashed teal `<Shape>`/`<Line>`, or the `"select"` marquee rectangle). Takes world coordinates; renders inside the world div.
+**`usePreview()` → `{ preview, enablePreview, disablePreview }`** — state for the drag ghost: plain data `{ mode, startX, startY, endX, endY }` in world coordinates (never JSX). The rendering lives in the **`<Preview mode={...}>`** component — a mode table (`rectangle` / `oval` / `line` / `select` marquee, extensible) that picks the ghost component and its dashed-teal style. Board renders it inside the world div.
 
 **`useContent(start)` → `{ content, selectedElements, hasElement, getElement, addElements, selectElements, updateElements, deleteElements, clearContent, encodeContent }`** — committed elements plus selection, all plural:
 

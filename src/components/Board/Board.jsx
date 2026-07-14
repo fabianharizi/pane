@@ -1,6 +1,7 @@
 import styles from './Board.module.css'
 import useContent from '../../utils/hooks/useContent'
 import SelectionBox from '../SelectionBox/SelectionBox'
+import Preview from '../Preview/Preview'
 
 // The board is the camera viewport: it clips, carries the camera CSS variables,
 // and receives all pointer/wheel input. The world div inside it is translated
@@ -21,7 +22,7 @@ export default function Board({boardRef, content, camera, preview, selectedEleme
     >
       <div className={styles.world}>
         {encodeContent(content)}
-        {preview}
+        {preview && <Preview {...preview} />}
         {selectedElements.length > 0 && <SelectionBox
           elements={selectedElements.map(getElement).filter(Boolean)}
           zoom={camera.zoom}
