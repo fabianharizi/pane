@@ -1,31 +1,24 @@
 import { useRef } from 'react';
 import usePointer from '../hooks/usePointer';
 
-// This hook is used to implement the "Move" tool. 
-// It needs a condition to be active
+// This hook is used to implement the "Move" tool: dragging pans the camera, so
+// the content follows the cursor. It needs a condition to be active.
 
-export default function useMoveTool(ref, active, scrollTo) {
-  const boardPos = useRef({
-    x: 0, 
-    y: 0
-  })
+export default function useMoveTool(ref, active, panBy) {
+  // Last pointer position — panning applies incremental deltas.
+  const last = useRef({ x: 0, y: 0 })
 
   usePointer(ref, {
     active: active,
     cursor: "grab",
     onDown: (p, setCursor) => {
-      boardPos.current = {
-        x: ref.current.scrollLeft, 
-        y: ref.current.scrollTop
-      }
+      last.current = { x: p.x, y: p.y }
       setCursor("grabbing")
     },
     onMove: (p) => {
       if(!p.hasDragged) return;
-      
-      const dx = p.x - p.startX;
-      const dy = p.y - p.startY;
-      scrollTo(boardPos.current.x - dx, boardPos.current.y - dy);
+      panBy(p.x - last.current.x, p.y - last.current.y)
+      last.current = { x: p.x, y: p.y }
     },
     onUp: (p, setCursor) => {
       setCursor()

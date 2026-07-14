@@ -2,49 +2,31 @@ import { useRef } from 'react';
 import usePointer from '../hooks/usePointer';
 import UUID from '../methods/UUID'
 
-// This hook is used to implement the "Shape" tool. 
-// It needs a condition to be active
+// This hook is used to implement the "Text" tool.
+// It needs a condition to be active.
 
-export default function useTextTool(ref, active, enablePreview, disablePreview, addElements, setActiveTool) {
-  const boardPos = useRef({
-    x: 0, 
-    y: 0,
-    centerX: 0,
-    centerY: 0,
-  })
+export default function useTextTool(ref, active, toWorld, enablePreview, disablePreview, addElements, setActiveTool) {
+  // World position of the pointerdown — the text box's anchored corner.
+  const start = useRef({ x: 0, y: 0 })
 
   usePointer(ref, {
     active: active,
     cursor: "crosshair",
     onDown: (p) => {
-      boardPos.current = {
-        x: ref.current.scrollLeft, 
-        y: ref.current.scrollTop,
-        centerX: ref.current.scrollWidth / 2,
-        centerY: ref.current.scrollHeight / 2,
-      }
+      start.current = toWorld(p.x, p.y)
     },
     onMove: (p) => {
       if(!p.hasDragged) return;
-      
-      enablePreview(
-        "rectangle", 
-        p.startX + boardPos.current.x, 
-        p.startY + boardPos.current.y, 
-        p.x + boardPos.current.x, 
-        p.y + boardPos.current.y
-      )
+      const cur = toWorld(p.x, p.y)
+      enablePreview("rectangle", start.current.x, start.current.y, cur.x, cur.y)
     },
     onUp: (p) => {
+      const cur = toWorld(p.x, p.y)
       const coords = {
-        startX: p.startX + boardPos.current.x - boardPos.current.centerX, 
-        startY: p.startY + boardPos.current.y - boardPos.current.centerY, 
-        endX: (p.hasDragged) 
-                ? p.x + boardPos.current.x - boardPos.current.centerX 
-                : p.startX + boardPos.current.x - boardPos.current.centerX + 200, 
-        endY: (p.hasDragged) 
-                ? p.y + boardPos.current.y - boardPos.current.centerY 
-                : p.startY + boardPos.current.y - boardPos.current.centerY + 50, 
+        startX: start.current.x,
+        startY: start.current.y,
+        endX: p.hasDragged ? cur.x : start.current.x + 200,
+        endY: p.hasDragged ? cur.y : start.current.y + 50,
       }
 
       addElements([{

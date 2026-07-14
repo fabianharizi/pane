@@ -3,8 +3,9 @@ import './App.css'
 import Board from './components/Board/Board';
 import Toolbar from './components/Toolbar/Toolbar';
 import Properties from './components/Properties/Properties';
+import ZoomBar from './components/ZoomBar/ZoomBar';
 import useContent from './utils/hooks/useContent';
-import useBoard from './utils/hooks/useBoard';
+import useCamera from './utils/hooks/useCamera';
 import usePreview from './utils/hooks/usePreview';
 import useSelectTool from './utils/tools/useSelectTool';
 import useMoveTool from './utils/tools/useMoveTool';
@@ -18,11 +19,10 @@ const SELECTION_TOOLS = ['select', 'move'];
 
 export default function App(){
   const boardRef = useRef(null);
-  const canvasRef = useRef(null);
 
   const [activeTool, setActiveTool] = useState("select");
   const {content, selectedElements, getElement, addElements, selectElements, updateElements, deleteElements, clearContent} = useContent([]);
-  const {boardState, scrollTo, scrollBy} = useBoard(boardRef, canvasRef, content);
+  const {camera, panBy, zoomTo, toWorld} = useCamera(boardRef);
   const {preview, enablePreview, disablePreview} = usePreview();
   const clipboard = useRef(null)
 
@@ -36,18 +36,20 @@ export default function App(){
     activeTool === 'select',
     content,
     selectElements,
+    toWorld,
     enablePreview,
     disablePreview
   )
   useMoveTool(
     boardRef,
     activeTool === 'move',
-    scrollTo
+    panBy
   )
   useShapeTool(
     boardRef,
     activeTool === 'rectangle' || activeTool === 'oval',
     activeTool,
+    toWorld,
     enablePreview,
     disablePreview,
     addElements,
@@ -56,6 +58,7 @@ export default function App(){
   useLineTool(
     boardRef,
     activeTool === 'line',
+    toWorld,
     enablePreview,
     disablePreview,
     addElements,
@@ -64,6 +67,7 @@ export default function App(){
   useTextTool(
     boardRef,
     activeTool === 'text',
+    toWorld,
     enablePreview,
     disablePreview,
     addElements,
@@ -97,6 +101,9 @@ export default function App(){
         }
       })))
       }},
+    { shortcut: "ctrl+=",    handler: () => zoomTo(camera.zoom * 1.25) },
+    { shortcut: "ctrl+-",    handler: () => zoomTo(camera.zoom / 1.25) },
+    { shortcut: "ctrl+0",    handler: () => zoomTo(1) },
   ]);
 
   return (
@@ -104,9 +111,8 @@ export default function App(){
       <main className="container">
         <Board
           boardRef={boardRef}
-          canvasRef={canvasRef}
           content={content}
-          boardState={boardState}
+          camera={camera}
           preview={preview}
           selectedElements={selectedElements}
           getElement={getElement}
@@ -122,10 +128,13 @@ export default function App(){
             />
           </div>
           <div className="toolbar">
-            <Toolbar 
+            <Toolbar
               activeTool={activeTool}
               setActiveTool={setActiveTool}
             />
+          </div>
+          <div className="zoombar">
+            <ZoomBar zoom={camera.zoom} zoomTo={zoomTo} />
           </div>
         </div>
       </main>

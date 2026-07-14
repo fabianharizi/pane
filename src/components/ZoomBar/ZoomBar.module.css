@@ -1,0 +1,36 @@
+.zoombar{
+  background-color: #fff2;
+  backdrop-filter: blur(5px);
+  border: 1px solid #fff2;
+  padding: 4px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  box-shadow: 4px 4px 15px #15151580;
+}
+
+.zoombar button{
+  height: 28px;
+  min-width: 28px;
+  padding: 0 6px;
+  border-radius: 3px;
+  background-color: transparent;
+  border: 0;
+  cursor: pointer;
+  color: #e8e8e8;
+  font-size: 14px;
+  line-height: 1;
+  transition: 0.2s ease;
+}
+
+.zoombar button:hover{
+  background-color: #0001;
+}
+
+.readout{
+  min-width: 52px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: #ffffffaa;
+}

@@ -4,7 +4,9 @@
   left: var(--x);
   width: var(--width);
   height: var(--height);
-  border: 1px solid #6c6cff;
+  /* The box lives inside the zoomed world div; dividing by the camera zoom
+     (inherited from .board) keeps the outline 1 SCREEN px at any zoom. */
+  border: calc(1px / var(--cam-zoom)) solid #6c6cff;
 
   /* Non-interactive (e.g. while panning): just an outline, clicks pass through. */
   pointer-events: none;
@@ -20,7 +22,8 @@
   position: absolute;
   left: var(--hx);
   top: var(--hy);
-  transform: translate(-50%, -50%);
+  /* Counter-scale so handles render at a constant screen size at any zoom. */
+  transform: translate(-50%, -50%) scale(calc(1 / var(--cam-zoom)));
 
   width: 8px;
   height: 8px;
@@ -37,7 +40,8 @@
   position: absolute;
   left: var(--hx);
   top: var(--hy);
-  transform: translate(-50%, -50%);
+  /* Counter-scale so endpoint dots render at a constant screen size at any zoom. */
+  transform: translate(-50%, -50%) scale(calc(1 / var(--cam-zoom)));
 
   width: 10px;
   height: 10px;

@@ -5,34 +5,20 @@ import usePointer from '../hooks/usePointer';
 // Click selects one element (empty canvas deselects); dragging draws a marquee
 // and selects every element it overlaps. Both paths go through selectElements.
 
-export default function useSelectTool(ref, active, content, selectElements, enablePreview, disablePreview) {
-  const boardPos = useRef({
-    x: 0,
-    y: 0,
-    centerX: 0,
-    centerY: 0,
-  })
+export default function useSelectTool(ref, active, content, selectElements, toWorld, enablePreview, disablePreview) {
+  // World position of the pointerdown — the marquee's anchored corner.
+  const start = useRef({ x: 0, y: 0 })
 
   usePointer(ref, {
     active: active,
     cursor: "default",
-    onDown: () => {
-      boardPos.current = {
-        x: ref.current.scrollLeft,
-        y: ref.current.scrollTop,
-        centerX: ref.current.scrollWidth / 2,
-        centerY: ref.current.scrollHeight / 2,
-      }
+    onDown: (p) => {
+      start.current = toWorld(p.x, p.y)
     },
     onMove: (p) => {
       if(!p.hasDragged) return;
-      enablePreview(
-        "select",
-        p.startX + boardPos.current.x,
-        p.startY + boardPos.current.y,
-        p.x + boardPos.current.x,
-        p.y + boardPos.current.y
-      )
+      const cur = toWorld(p.x, p.y)
+      enablePreview("select", start.current.x, start.current.y, cur.x, cur.y)
     },
     onUp: (p) => {
       disablePreview()
@@ -40,17 +26,13 @@ export default function useSelectTool(ref, active, content, selectElements, enab
       // A plain click is handled in onClick; only a drag marquees.
       if (!p.hasDragged) return;
 
-      // Marquee rect in CENTER-RELATIVE coords (the space elements are stored in).
-      const sx = p.startX + boardPos.current.x - boardPos.current.centerX;
-      const sy = p.startY + boardPos.current.y - boardPos.current.centerY;
-      const ex = p.x + boardPos.current.x - boardPos.current.centerX;
-      const ey = p.y + boardPos.current.y - boardPos.current.centerY;
-
+      // Marquee rect in world coords — the space elements are stored in.
+      const cur = toWorld(p.x, p.y)
       const marquee = {
-        left: Math.min(sx, ex),
-        top: Math.min(sy, ey),
-        right: Math.max(sx, ex),
-        bottom: Math.max(sy, ey),
+        left: Math.min(start.current.x, cur.x),
+        top: Math.min(start.current.y, cur.y),
+        right: Math.max(start.current.x, cur.x),
+        bottom: Math.max(start.current.y, cur.y),
       }
 
       // Select every element whose bounding box overlaps the marquee (partial

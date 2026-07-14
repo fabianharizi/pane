@@ -64,17 +64,11 @@ export default function useContent(start){
     setSelectedElements([])
   }
 
-  const encodeContent = (content, centerX, centerY) => {
+  const encodeContent = (content) => {
     return content.map(el => {
-      // Stored coords are center-relative; add the center back to render at
-      // absolute canvas position (inverse of the subtraction done in onUp).
-      const properties = {
-        ...el.properties,
-        startX: el.properties.startX + centerX,
-        startY: el.properties.startY + centerY,
-        endX: el.properties.endX + centerX,
-        endY: el.properties.endY + centerY,
-      }
+      // Stored coords ARE world coords — the camera transform on the world div
+      // handles all screen mapping, so properties pass through untouched.
+      const properties = el.properties
 
       switch(el.type){
         case "rectangle":

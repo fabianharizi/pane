@@ -37,6 +37,13 @@ body{
   pointer-events: none;
 }
 
+.container .zoombar{
+  position: absolute;
+  right: 20px;
+  bottom: 50px;
+  pointer-events: none;
+}
+
 .container .properties{
   position: absolute;
   top: 20px;
