@@ -23,7 +23,8 @@ Core whiteboard interactions work end-to-end: drawing (rectangle, oval, line, te
 - **Rotation** — drag the dot above the selection to rotate; Shift snaps to 15°. Shapes and text store a `rotation` (shown in the panel, editable); rotating a group turns everything about the group center — lines included, via their endpoints
 - **Drawing tools** — rectangle, oval, line, text; live dashed ghost preview; a plain click drops a default-sized element; a fresh draw is auto-selected and the tool returns to Select
 - **Properties panel** — edits the selected element's geometry and style live (position/size, fill & stroke with on/off toggles, stroke width/style, corner radius, opacity, text) — shown when exactly one element is selected
-- **Copy / paste / delete** — `Ctrl+C` / `Ctrl+V` (pastes the whole group, offset, and selects it), `Delete`/`Backspace` removes the selection
+- **Copy / cut / paste / duplicate / delete** — `Ctrl+C` / `Ctrl+X` / `Ctrl+V` (group-aware, pasted set selected) / `Ctrl+D` (duplicate in place, clipboard untouched) / `Delete`/`Backspace`
+- **Command registry** — every app verb is declared once (`{ id, label, shortcut, enabled, run }`) and bound everywhere: shortcuts, the zoom bar, and future menus/palette all dispatch the same commands
 - **Keyboard shortcuts** — sticky tool keys `V` `H` `R` `O` `L` `T`, momentary Space-pan, exact modifier matching (bare `R` won't collide with Ctrl+R)
 - **Element identity & styling** — crypto-random ids as React keys / `data-uuid`; every element carries its own `properties` bag
 
@@ -83,9 +84,9 @@ Shared drawing lifecycle: `onDown` snapshots `toWorld(pointer)` as the anchor; `
 
 `Properties` receives the same `selectedElements` array and shows itself only when exactly one element is selected.
 
-### Shortcuts
+### Commands & shortcuts
 
-Declared per-tool in `toolset.js` (`shortcut` sticky, `momentary` hold-to-switch). `useShortcuts(activeTool, setActiveTool, actions)` matches modifiers exactly; App's `actions` wire Delete/Backspace, Ctrl+C/V, and Ctrl+= / Ctrl+- / Ctrl+0 zoom.
+App functions are **commands** — verbs declared once in a registry (`useCommands`: delete, copy, cut, paste, duplicate, zoom ×3) as `{ id, label, shortcut, enabled, run }`. Surfaces never contain behavior: `useShortcuts` binds the `shortcut`s (exact modifier matching, priority over tool keys), the ZoomBar dispatches `runCommand("zoom-in")`, and future menus or a command palette just render the same registry. `enabled` predicates gate execution everywhere (Ctrl+X with nothing selected does nothing). Tool keys stay declared per-tool in `toolset.js` (`shortcut` sticky, `momentary` hold-to-switch) — tools are modes, not commands.
 
 ---
 

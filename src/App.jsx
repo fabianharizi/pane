@@ -13,7 +13,7 @@ import useShapeTool from './utils/tools/useShapeTool';
 import useLineTool from './utils/tools/useLineTool';
 import useTextTool from './utils/tools/useTextTool';
 import useShortcuts from './utils/hooks/useShortcuts';
-import UUID from './utils/methods/UUID';
+import useCommands from './utils/hooks/useCommands';
 
 const SELECTION_TOOLS = ['select', 'move'];
 
@@ -24,7 +24,10 @@ export default function App(){
   const {content, selectedElements, getElement, addElements, selectElements, updateElements, deleteElements, clearContent} = useContent([]);
   const {camera, panBy, zoomTo, toWorld} = useCamera(boardRef);
   const {preview, enablePreview, disablePreview} = usePreview();
-  const clipboard = useRef(null)
+
+  // The command registry: every app verb declared once (delete/copy/cut/paste/
+  // duplicate/zoom...), consumed by shortcuts, ZoomBar, and future menus.
+  const {commands, runCommand} = useCommands({ selectedElements, getElement, addElements, deleteElements, camera, zoomTo });
 
   useEffect(() => {
     if (selectedElements.length && !SELECTION_TOOLS.includes(activeTool)) selectElements([]);
@@ -74,37 +77,8 @@ export default function App(){
     setActiveTool
   )
 
-  // Install shortcuts
-  useShortcuts(activeTool, setActiveTool, [
-    { shortcut: "delete",    handler: () => { if (selectedElements.length) deleteElements(selectedElements); } },
-    { shortcut: "backspace", handler: () => { if (selectedElements.length) deleteElements(selectedElements); } },
-    { shortcut: "ctrl+c",    handler: () => {
-      if (!selectedElements.length) return;
-      // Snapshot type + properties of every selected element (uuids minted on paste).
-      clipboard.current = selectedElements
-        .map(getElement)
-        .filter(Boolean)
-        .map(el => ({ type: el.type, properties: { ...el.properties } }))
-      }},
-    { shortcut: "ctrl+v",    handler: () => {
-      if (!clipboard.current?.length) return;
-      // Paste the whole group offset by 20px; addElements selects the pasted set.
-      addElements(clipboard.current.map(c => ({
-        type: c.type,
-        uuid: UUID.generate(c.type.slice(0, 4)),
-        properties: {
-          ...c.properties,
-          startX: c.properties.startX + 20,
-          startY: c.properties.startY + 20,
-          endX: c.properties.endX + 20,
-          endY: c.properties.endY + 20,
-        }
-      })))
-      }},
-    { shortcut: "ctrl+=",    handler: () => zoomTo(camera.zoom * 1.25) },
-    { shortcut: "ctrl+-",    handler: () => zoomTo(camera.zoom / 1.25) },
-    { shortcut: "ctrl+0",    handler: () => zoomTo(1) },
-  ]);
+  // Install shortcuts — key bindings come from the registry.
+  useShortcuts(activeTool, setActiveTool, commands);
 
   return (
     <>
@@ -135,7 +109,7 @@ export default function App(){
             />
           </div>
           <div className="zoombar">
-            <ZoomBar zoom={camera.zoom} zoomTo={zoomTo} />
+            <ZoomBar zoom={camera.zoom} runCommand={runCommand} />
           </div>
         </div>
       </main>

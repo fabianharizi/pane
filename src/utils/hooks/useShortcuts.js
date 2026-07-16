@@ -7,8 +7,10 @@ import toolset from "../tools/toolset";
 //   - shortcut:  sticky press (switch tool, stays)
 //   - momentary: hold to temporarily switch, restore previous tool on release
 //
-// Non-tool shortcuts (undo, delete, ...) are passed as `actions`:
-//   [{ shortcut: "ctrl+z", handler: () => {...} }, ...]
+// App commands (delete, copy, zoom, ...) come from the command registry
+// (useCommands): [{ id, label, shortcut?, enabled?, run }]. `shortcut` may be
+// a string or an array of strings; a command whose `enabled()` is false is
+// swallowed (the key is claimed by the app) but not run.
 //
 // Shortcut strings support modifiers: "ctrl+z", "ctrl+shift+z", "shift+r".
 // Matching is EXACT — "r" fires only with no modifiers held, so it won't
@@ -44,16 +46,16 @@ const toolBindings = tools
   .filter(t => t.shortcut)
   .map(t => ({ combo: parseShortcut(t.shortcut), id: t.id }));
 
-export default function useShortcuts(activeTool, setActiveTool, actions = []) {
+export default function useShortcuts(activeTool, setActiveTool, commands = []) {
   const previousTool = useRef(null);
 
   // Latest-ref so listeners attach once but always see current props.
-  const latest = useRef({ activeTool, setActiveTool, actions });
-  useEffect(() => { latest.current = { activeTool, setActiveTool, actions }; });
+  const latest = useRef({ activeTool, setActiveTool, commands });
+  useEffect(() => { latest.current = { activeTool, setActiveTool, commands }; });
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      const { activeTool, setActiveTool, actions } = latest.current;
+      const { activeTool, setActiveTool, commands } = latest.current;
 
       const el = e.target;                                // don't hijack typing
       if (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable) return;
@@ -71,11 +73,14 @@ export default function useShortcuts(activeTool, setActiveTool, actions = []) {
 
       if (e.repeat) return;                               // ignore auto-repeat
 
-      // Actions take priority over tool keys (more specific / modifier combos).
-      const action = actions.find(a => matches(e, parseShortcut(a.shortcut)));
-      if (action) {
-        e.preventDefault();
-        action.handler();
+      // Commands take priority over tool keys (more specific / modifier combos).
+      // A command's shortcut may be a single combo or an array of them.
+      const command = commands.find(c =>
+        c.shortcut && [c.shortcut].flat().some(s => matches(e, parseShortcut(s)))
+      );
+      if (command) {
+        e.preventDefault();   // the key is the app's even when currently disabled
+        if (command.enabled?.() !== false) command.run();
         return;
       }
 
