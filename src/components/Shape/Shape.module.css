@@ -9,7 +9,7 @@
   rotate: var(--rotation, 0deg);
 
   background-color: var(--fill);
-  border: var(--strokeWidth) var(--strokeStyle) var(--strokeColor);
+  outline: var(--strokeWidth) var(--strokeStyle) var(--strokeColor);
   opacity: var(--opacity);
 }
 
