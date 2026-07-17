@@ -15,25 +15,17 @@ That one decision is the technical differentiator: the canvas isn't a rendering 
 ## How it works
 
 1. You describe a widget in plain language.
-2. The app sends the request to the **Anthropic API**.
+2. The app sends the request to Claude (**Anthropic API**).
 3. Claude returns a **self-contained HTML/CSS/JS document** as plain text.
 4. The app injects it into a **sandboxed iframe** and places it on the canvas as a new pane — positioned, sized, and persisted like any other canvas node.
 
 Because each pane is isolated in its own iframe, generated code can be fully interactive without touching the host app.
 
-## Data model
-
-```
-users → canvases → canvas nodes
-```
-
-A **canvas node** stores position, size, type, and a JSON `content` payload (for a pane: the generated document; other node types carry their own content shape).
-
 ---
 
 ## Status
 
-**Built and working today** — the canvas foundation (this repo):
+**Built and working today** — the canvas foundation:
 
 - **Infinite canvas with a camera** — pan anywhere, zoom 10%–800% anchored at the cursor; wheel pans, Shift+wheel pans horizontally, Ctrl/⌘+wheel (or trackpad pinch) zooms; grid and origin crosshair stay crisp at any zoom
 - **DOM-based elements** — every canvas object is a real DOM node in a transformed "world" div; the browser does all the coordinate mapping
@@ -44,14 +36,11 @@ A **canvas node** stores position, size, type, and a JSON `content` payload (for
 
 **Designed, not yet built:**
 
-- The pane generation pipeline (prompt → backend → sandboxed iframe on the canvas)
-- The backend itself — Express + PostgreSQL + auth — which lives in a **separate repository**; this repo stays frontend-only and talks to it over HTTP
+- The pane generation pipeline (prompt → Claude → sandboxed iframe on the canvas)
 
 ---
 
 ## Architecture
-
-### Frontend (this repo)
 
 React 19 + Vite, no state library, no router, CSS Modules. The guiding philosophy: **UI components are thin; all real behavior lives in custom hooks.**
 
@@ -60,32 +49,16 @@ React 19 + Vite, no state library, no router, CSS Modules. The guiding philosoph
 - **`useContent`** — committed elements + selection; all operations are **plural-only** (arrays) — a single element is a one-element array.
 - **`useCommands`** — the command registry described above; surfaces never contain behavior.
 
-**Backend-ready by design.** The backend lives elsewhere, so this app is built to swap in remote persistence without touching canvas code: element state is plain serializable JSON (already matching the canvas-node shape), ids are client-minted, and all content mutations flow through the single `useContent` API — the seam where a sync/API layer plugs in. AI calls and persistence will go behind one thin client service module, never scattered `fetch`es in components.
-
-### Backend (separate repository)
-
-Express + **PostgreSQL**, deployed on **Railway**:
-
-- `/generate` — proxies widget prompts to the Anthropic API and returns the pane document (the key stays server-side)
-- CRUD for users / canvases / canvas nodes
-- Auth: TBD
-
 ## Tech stack
 
-| Layer | Choice |
-|---|---|
-| Frontend | Vite + React 19, CSS Modules, lucide-react (this repo) |
-| AI | Anthropic API (Claude) |
-| Backend | Express (separate repo) |
-| Database | PostgreSQL (separate repo) |
-| Hosting | Railway |
-| Auth | not decided yet |
+- React 19 + Vite
+- CSS Modules
+- lucide-react (icons)
+- Anthropic API (Claude) — pane generation
 
 ---
 
 ## Running locally
-
-This repo is the frontend app and runs standalone:
 
 ```bash
 npm install
@@ -95,18 +68,13 @@ npm run preview  # serve the production build
 npm run lint     # eslint
 ```
 
-Once wired to the backend (separate repo), the API base URL will be configured via an env var (e.g. `VITE_API_URL`); the app should keep working standalone without it.
-
 ---
 
 ## Roadmap
 
 - [x] Canvas foundation: camera viewport, DOM elements, multi-select, resize/rotate, properties panel, command registry
 - [ ] Pane node type: sandboxed iframe rendering of stored HTML/CSS/JS content
-- [ ] Client API/service layer: single seam for generation + persistence calls to the backend repo
-- [ ] Generation flow: prompt input → backend `/generate` → new pane on the canvas
-- [ ] Persistence: load/save canvases through the backend (users → canvases → canvas nodes)
-- [ ] Railway deployment
-- [ ] Auth
+- [ ] Generation flow: prompt input → Claude → new pane on the canvas
 - [ ] Pane lifecycle: regenerate, edit prompt, pin/resize behaviors
+- [ ] Canvas persistence (save / load)
 - [ ] Undo / redo
