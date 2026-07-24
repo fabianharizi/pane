@@ -38,6 +38,12 @@ Because each pane is isolated in its own iframe, generated code can be fully int
 
 - The pane generation pipeline (prompt → Claude → sandboxed iframe on the canvas)
 
+## Keyboard shortcuts
+
+**Tools** — `V` select · `H` move · `R` rectangle · `O` oval · `L` line · `T` text · hold `Space` to pan momentarily, releasing returns to the previous tool
+
+**Commands** — `Delete`/`Backspace` delete · `Ctrl+C` copy · `Ctrl+X` cut · `Ctrl+V` paste · `Ctrl+D` duplicate · `Ctrl+=` / `Ctrl+-` / `Ctrl+0` zoom in / out / reset to 100%
+
 ---
 
 ## Architecture
@@ -45,7 +51,7 @@ Because each pane is isolated in its own iframe, generated code can be fully int
 React 19 + Vite, no state library, no router, CSS Modules. The guiding philosophy: **UI components are thin; all real behavior lives in custom hooks.**
 
 - **Camera viewport** — `useCamera` owns `{ x, y, zoom }`; the Board is a clipping viewport div containing a world div with `transform: translate(pan) scale(zoom)`. Elements are stored in world coordinates and render untouched. `toWorld(screenX, screenY)` is the single conversion; drag deltas divide by zoom.
-- **`usePointer`** — the event bridge: Pointer Events with capture, drag slop, gesture ownership.
+- **`usePointer`** — the event bridge: Pointer Events with capture, drag slop, gesture ownership; callbacks only ever fire for gestures that started on their own element.
 - **`useContent`** — committed elements + selection; all operations are **plural-only** (arrays) — a single element is a one-element array.
 - **`useCommands`** — the command registry described above; surfaces never contain behavior.
 
@@ -54,7 +60,7 @@ React 19 + Vite, no state library, no router, CSS Modules. The guiding philosoph
 - React 19 + Vite
 - CSS Modules
 - lucide-react (icons)
-- Anthropic API (Claude) — pane generation
+- Anthropic API (Claude) — pane generation (planned)
 
 ---
 

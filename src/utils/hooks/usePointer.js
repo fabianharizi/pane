@@ -89,6 +89,13 @@ export default function usePointer(ref, callback) {
 
     if (ref.current.hasPointerCapture?.(e.pointerId)) ref.current.releasePointerCapture(e.pointerId);
 
+    // Only finalize a gesture this instance started. A pointerup can arrive
+    // without a matching pointerdown here — the press began on another element
+    // (a UI button slid off), under another tool (switched away mid-press), or
+    // with a non-left button that handleDown filtered — and firing onUp then
+    // would hand the tool a stale pointer snapshot (phantom commits).
+    if (!pointer.current.isDown) return;
+
     latestCallback.current.onUp?.(
       pointer.current = {
         ...pointer.current,
@@ -128,10 +135,12 @@ export default function usePointer(ref, callback) {
     sawDown.current = false;
     if (!sawGesture || pointer.current.hasDragged) return;
 
+    // Deliberately leaves isDown alone (false since the pointerup): a click is
+    // not a gesture in progress, and re-marking it down would re-arm the
+    // missed-pointerup safety net into a spurious onUp on the next hover move.
     latestCallback.current.onClick?.(
       pointer.current = {
         ...pointer.current,
-        isDown: true,
         startX: e.clientX,
         startY: e.clientY,
         x: e.clientX,

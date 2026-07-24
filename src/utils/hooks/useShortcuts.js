@@ -19,7 +19,6 @@ import toolset from "../tools/toolset";
 
 const tools = toolset.flat();
 const momentaryTool = tools.find(t => t.momentary);
-const DEFAULT_TOOL = "select";
 
 function parseShortcut(str) {
   const parts = str.toLowerCase().split("+");
@@ -93,8 +92,13 @@ export default function useShortcuts(activeTool, setActiveTool, commands = []) {
 
     const handleKeyUp = (e) => {
       const { setActiveTool } = latest.current;
-      if (momentaryTool && e.key === momentaryTool.momentary) {
-        setActiveTool(previousTool.current ?? DEFAULT_TOOL);
+
+      // Restore only when a momentary hold is actually in progress — previousTool
+      // doubles as that flag. A keyup with no matching engage (e.g. Space typed
+      // into a panel input, whose keydown the input guard swallowed) must not
+      // switch tools.
+      if (momentaryTool && e.key === momentaryTool.momentary && previousTool.current !== null) {
+        setActiveTool(previousTool.current);
         previousTool.current = null;
       }
     };
