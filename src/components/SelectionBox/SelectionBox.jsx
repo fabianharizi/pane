@@ -2,6 +2,7 @@ import styles from "./SelectionBox.module.css"
 import usePointer from './../../utils/hooks/usePointer';
 import { useRef, useState } from "react";
 import { rad, deg, rotatePoint } from "../../utils/methods/lineGeometry";
+import BindPoint from "../BindPoint/BindPoint";
 
 // Smallest the selection box may be resized to, in SCREEN px (divided by zoom
 // at use, so the minimum feels constant at any zoom). Prevents collapse/flip.
@@ -168,15 +169,13 @@ export default function SelectionBox({ elements, zoom, toWorld, updateElements, 
             ))}
             <RotateHandle elements={elements} toWorld={toWorld} updateElements={updateElements} />
           </>)}
-      {interactive && bindCandidate && <span
-        className={styles.bindTarget}
-        style={{
-          "--bx": (bindCandidate.bounds.left - box.left) + "px",
-          "--by": (bindCandidate.bounds.top - box.top) + "px",
-          "--bw": (bindCandidate.bounds.right - bindCandidate.bounds.left) + "px",
-          "--bh": (bindCandidate.bounds.bottom - bindCandidate.bounds.top) + "px",
-          "--brot": (bindCandidate.bounds.rotation || 0) + "deg",
-        }}
+      {/* Marks the exact anchor the endpoint will glue to. The endpoint has
+          already snapped there, so this confirms the precise attachment point
+          rather than "somewhere on that element". Offsets are box-relative
+          because it renders inside this container, not the world div. */}
+      {interactive && bindCandidate && <BindPoint
+        x={bindCandidate.anchor.x - box.left}
+        y={bindCandidate.anchor.y - box.top}
       />}
     </div>
   )

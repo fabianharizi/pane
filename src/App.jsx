@@ -14,6 +14,7 @@ import useLineTool from './utils/tools/useLineTool';
 import useTextTool from './utils/tools/useTextTool';
 import useShortcuts from './utils/hooks/useShortcuts';
 import useCommands from './utils/hooks/useCommands';
+import { bindTargetAt } from './utils/methods/hitTest';
 
 const SELECTION_TOOLS = ['select', 'move'];
 
@@ -39,6 +40,11 @@ export default function App(){
   const editing = editingElement && selectedElements.includes(editingElement)
     ? editingElement
     : null;
+
+  // One definition of "what would a line endpoint bind to at this world point",
+  // shared by both binding gestures — drawing with the line tool and dragging an
+  // endpoint handle — so they agree, including on the zoom-scaled pick radius.
+  const hitTest = (wx, wy) => bindTargetAt(content, { x: wx, y: wy }, camera.zoom);
 
   // The command registry: every app verb declared once (delete/copy/cut/paste/
   // duplicate/zoom...), consumed by shortcuts, ZoomBar, and future menus.
@@ -76,7 +82,7 @@ export default function App(){
   useLineTool(
     boardRef,
     activeTool === 'line',
-    content,
+    hitTest,
     toWorld,
     enablePreview,
     disablePreview,
@@ -110,6 +116,7 @@ export default function App(){
           updateElements={updateElements}
           // The selection box covers the element it wraps, so it has to stand
           // down while editing or the caret could never reach the textarea.
+          hitTest={hitTest}
           selectionInteractive={activeTool === 'select' && !editing}
           editingElement={editing}
           onEditStart={startEditing}

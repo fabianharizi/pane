@@ -1,0 +1,19 @@
+/* The exact anchor a line endpoint will bind to. Sized to ring the endpoint dot
+   (which has already snapped to this point), and counter-scaled — like every
+   other piece of chrome — so it stays a constant size on screen at any zoom.
+   `--cam-zoom` is inherited from .board, so this works anywhere inside it. */
+.bindPoint{
+  position: absolute;
+  left: var(--hx);
+  top: var(--hy);
+  transform: translate(-50%, -50%) scale(calc(1 / var(--cam-zoom)));
+
+  width: 18px;
+  height: 18px;
+  box-sizing: border-box;
+  border: 2px solid #22cc88;
+  border-radius: 50%;
+  background-color: #22cc8833;
+
+  pointer-events: none;
+}

@@ -94,16 +94,5 @@
   inset: -5px;
 }
 
-/* Highlight over the element a dragged line endpoint would bind to. Rotates
-   with the candidate (about its own center, since the span spans its bbox). */
-.bindTarget{
-  position: absolute;
-  left: var(--bx);
-  top: var(--by);
-  width: var(--bw);
-  height: var(--bh);
-  rotate: var(--brot, 0deg);
-  outline: calc(2px / var(--cam-zoom)) dashed #22cc88;
-  outline-offset: calc(2px / var(--cam-zoom));
-  pointer-events: none;
-}
+/* The bind-anchor marker lives in its own component (BindPoint) — the line tool
+   renders the same thing while drawing, so it can't live in this module. */

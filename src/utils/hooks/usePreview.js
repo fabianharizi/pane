@@ -7,8 +7,11 @@ import { useState } from "react";
 export default function usePreview(){
   const [preview, setPreview] = useState(null)
 
-  const enablePreview = (mode, startX, startY, endX, endY) => {
-    setPreview({ mode, startX, startY, endX, endY })
+  // `extra` carries mode-specific hints beyond the ghost's corners — today the
+  // line tool's pending bind anchors. Merged flat, so <Preview> just receives
+  // them as ordinary props.
+  const enablePreview = (mode, startX, startY, endX, endY, extra) => {
+    setPreview({ mode, startX, startY, endX, endY, ...extra })
   }
 
   const disablePreview = () => {

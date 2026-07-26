@@ -11,9 +11,9 @@ const BINDABLE = new Set(["rectangle", "oval", "text"])
 const BIND_PAD = 10
 
 // Topmost bindable element under a world point. Returns the target's uuid, the
-// nearest side (the one a dropped endpoint should anchor to), the anchor point
-// itself, and the target's bounds/rotation (for rendering a highlight) — or
-// null when the point is over empty canvas.
+// nearest side (the one a dropped endpoint should anchor to) and that side's
+// anchor point — which is both where the endpoint snaps and where the UI marks
+// the pending attachment. Null when the point is over empty canvas.
 export function bindTargetAt(content, worldPt, zoom = 1) {
   const pad = BIND_PAD / zoom
 
@@ -42,12 +42,7 @@ export function bindTargetAt(content, worldPt, zoom = 1) {
     }
     const side = Object.keys(distances).reduce((a, b) => (distances[a] <= distances[b] ? a : b))
 
-    return {
-      uuid: el.uuid,
-      side,
-      anchor: anchorPoint(el, side),
-      bounds: { left, top, right, bottom, rotation },
-    }
+    return { uuid: el.uuid, side, anchor: anchorPoint(el, side) }
   }
   return null
 }

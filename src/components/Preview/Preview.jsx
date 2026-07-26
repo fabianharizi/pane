@@ -1,5 +1,6 @@
 import Shape from "../Shape/Shape";
 import Line from "../Line/Line";
+import BindPoint from "../BindPoint/BindPoint";
 
 // The drag ghost. All preview render logic lives here, keyed by `mode`; the
 // usePreview hook only holds the data. Coordinates are world coords — the
@@ -17,10 +18,18 @@ const MODES = {
   select:    { Component: Shape, props: { type: "rectangle" }, style: { ...GHOST, fill: "#0088aa20" } },  // marquee
 };
 
-export default function Preview({ mode, startX, startY, endX, endY }) {
+export default function Preview({ mode, startX, startY, endX, endY, anchors }) {
   const spec = MODES[mode];
   if (!spec) return null;                      // unknown mode renders nothing
 
   const { Component, props, style } = spec;
-  return <Component {...props} properties={{ startX, startY, endX, endY, ...style }} />;
+  return (
+    <>
+      <Component {...props} properties={{ startX, startY, endX, endY, ...style }} />
+      {/* Pending bind anchors, in world coords (this renders inside the world
+          div). The ghost has already snapped to them, so these confirm exactly
+          where each end will attach. */}
+      {anchors?.map((a, i) => <BindPoint key={i} x={a.x} y={a.y} />)}
+    </>
+  );
 }
