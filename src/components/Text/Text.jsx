@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react"
 import styles from "./Text.module.css"
+import { fontStack } from "../../utils/methods/fonts"
 
 // `editing` is the in-place edit session for THIS element, or null:
 //   { onChange(value), onEnd() }
@@ -24,6 +25,13 @@ export default function Text({
     rotation: 0,
     horizontal: "left",
     vertical: "top",
+    // Defaults match what the app rendered before font control existed (App.css
+    // puts DM Sans on everything at the browser's default size), so elements
+    // created earlier look identical.
+    fontFamily: "DM Sans",
+    fontSize: 16,
+    fontWeight: "400",
+    fontStyle: "normal",
     ...properties
   }
 
@@ -60,6 +68,10 @@ export default function Text({
         "--rotation": p.rotation + "deg",
         "--horizontal": p.horizontal,
         "--vertical": VERTICAL[p.vertical] ?? "start",
+        "--fontFamily": fontStack(p.fontFamily),
+        "--fontSize": p.fontSize + "px",
+        "--fontWeight": p.fontWeight,
+        "--fontStyle": p.fontStyle,
       }}>{editing
         ? <textarea
             ref={editor}

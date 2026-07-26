@@ -13,6 +13,15 @@
   color: #fff;
   margin: 0;
   padding: 0;
+
+  /* Beats the global `* { font-family: "DM Sans" }` in App.css on specificity
+     (class vs universal). The editor's `font: inherit` picks all four up, so the
+     textarea always matches the text it replaces. */
+  font-family: var(--fontFamily);
+  font-size: var(--fontSize);
+  font-weight: var(--fontWeight);
+  font-style: var(--fontStyle);
+
   white-space: pre-wrap;
   overflow-wrap: break-word; /* Legacy alias: word-wrap: break-word */
   

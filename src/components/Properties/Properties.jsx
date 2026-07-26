@@ -1,6 +1,7 @@
 import { useState } from "react"
 import styles from "./Properties.module.css"
 import { resolveLineEndpoints } from "../../utils/methods/lineGeometry"
+import { FONT_FAMILIES, WEIGHTS } from "../../utils/methods/fonts"
 
 // Which properties each element type exposes, in display order.
 // Only properties the components actually render are listed:
@@ -16,7 +17,7 @@ const SCHEMA = {
   rectangle: ["position", "size", "rotation", "fill", "strokeColor", "strokeWidth", "strokeStyle", "borderRadius", "opacity"],
   oval:      ["position", "size", "rotation", "fill", "strokeColor", "strokeWidth", "strokeStyle", "opacity"],
   line:      ["start", "end", "routing", "strokeColor", "strokeWidth", "strokeStyle", "headStart", "headEnd"],
-  text:      ["position", "size", "rotation", "horizontal", "vertical", "content"],
+  text:      ["position", "size", "rotation", "fontFamily", "fontSize", "fontWeight", "fontStyle", "horizontal", "vertical", "content"],
 }
 
 // Mirrors the per-component defaults, so an absent property still shows a value.
@@ -31,6 +32,10 @@ const DEFAULTS = {
   content: "",
   horizontal: "left",
   vertical: "top",
+  fontFamily: "DM Sans",
+  fontSize: 16,
+  fontWeight: "400",
+  fontStyle: "normal",
   routing: "straight",
   headStart: "none",
   headEnd: "arrow",
@@ -98,6 +103,10 @@ const FIELDS = {
   strokeColor:  { label: "Stroke",        type: "color", nullable: true },
   strokeWidth:  { label: "Stroke width",  type: "number", min: 0, max: 50,  step: 1 },
   strokeStyle:  { label: "Stroke style",  type: "select", options: ["solid", "dashed", "dotted"] },
+  fontFamily:   { label: "Font",          type: "select", options: FONT_FAMILIES },
+  fontSize:     { label: "Font size",     type: "number", min: 1, max: 400, step: 1 },
+  fontWeight:   { label: "Weight",        type: "select", options: WEIGHTS },
+  fontStyle:    { label: "Style",         type: "select", options: ["normal", "italic"] },
   horizontal:   { label: "Horizontal",    type: "select", options: ["left", "center", "right"] },
   vertical:     { label: "Vertical",      type: "select", options: ["top", "middle", "bottom"] },
   routing:      { label: "Routing",       type: "select", options: ["straight", "curved", "elbow"] },

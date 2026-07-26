@@ -37,7 +37,11 @@ export default function useTextTool(ref, active, toWorld, enablePreview, disable
           content: "Lorem ipsum dolor sit amet",
           rotation: 0,
           horizontal: "left",
-          vertical: "top"
+          vertical: "top",
+          fontFamily: "DM Sans",
+          fontSize: 16,
+          fontWeight: "400",
+          fontStyle: "normal"
         }
       }])
       disablePreview()
