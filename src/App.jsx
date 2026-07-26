@@ -25,6 +25,21 @@ export default function App(){
   const {camera, panBy, zoomTo, toWorld} = useCamera(boardRef);
   const {preview, enablePreview, disablePreview} = usePreview();
 
+  // uuid of the element being edited in place, or null. Only text elements are
+  // editable — SelectionBox reports the double-click, App decides what it means.
+  const [editingElement, setEditingElement] = useState(null);
+  const startEditing = (uuid) => {
+    if (getElement(uuid)?.type === "text") setEditingElement(uuid);
+  };
+
+  // A session is only live while its element is still the selection. Clicking
+  // away, switching tools and deleting all deselect, so deriving this closes
+  // the session for every one of them — no sync effect, and no chance of a
+  // stale uuid silently reopening an editor on the next selection.
+  const editing = editingElement && selectedElements.includes(editingElement)
+    ? editingElement
+    : null;
+
   // The command registry: every app verb declared once (delete/copy/cut/paste/
   // duplicate/zoom...), consumed by shortcuts, ZoomBar, and future menus.
   const {commands, runCommand} = useCommands({ selectedElements, getElement, addElements, deleteElements, camera, zoomTo });
@@ -93,7 +108,12 @@ export default function App(){
           selectedElements={selectedElements}
           getElement={getElement}
           updateElements={updateElements}
-          selectionInteractive={activeTool === 'select'}
+          // The selection box covers the element it wraps, so it has to stand
+          // down while editing or the caret could never reach the textarea.
+          selectionInteractive={activeTool === 'select' && !editing}
+          editingElement={editing}
+          onEditStart={startEditing}
+          onEditEnd={() => setEditingElement(null)}
         />
         <div className="interface">
           <div className="properties">

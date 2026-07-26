@@ -90,8 +90,10 @@ const mapCoord = (v, oldMin, oldSize, newMin, newSize) =>
 // `interactive` gates all dragging: only the select tool may resize/move/rotate.
 // `zoom` converts pointer deltas (screen px) into world units; `toWorld` converts
 // absolute pointer positions (needed for rotation angles). `hitTest` finds the
-// bindable element under a dragged line endpoint.
-export default function SelectionBox({ elements, zoom, toWorld, updateElements, hitTest, interactive }) {
+// bindable element under a dragged line endpoint. `onActivate(uuid)` fires when
+// a lone selection is double-clicked — the box covers the element, so this
+// overlay is the only thing that can see that gesture.
+export default function SelectionBox({ elements, zoom, toWorld, updateElements, hitTest, interactive, onActivate }) {
   const box = boundsOf(elements)
 
   // Bind candidate under an endpoint drag — rendered as a highlight so the
@@ -99,7 +101,7 @@ export default function SelectionBox({ elements, zoom, toWorld, updateElements, 
   const [bindCandidate, setBindCandidate] = useState(null)
 
   // Body-drag: dragging the container interior moves the whole selection.
-  const bodyRef = useBodyDrag(elements, zoom, updateElements, interactive)
+  const bodyRef = useBodyDrag(elements, zoom, updateElements, interactive, onActivate)
 
   // Endpoint handles are a line-type affordance (endpoint identity is per-line,
   // meaningless on a group), so they apply to a lone selected line only.
@@ -146,13 +148,18 @@ export default function SelectionBox({ elements, zoom, toWorld, updateElements, 
 // Attaches a pointer drag to the box container that translates every selected
 // element together. Pointer deltas are screen px → divide by zoom for world.
 // Translation is rotation-independent, so rotated chrome needs no special case.
-function useBodyDrag(elements, zoom, updateElements, interactive) {
+function useBodyDrag(elements, zoom, updateElements, interactive, onActivate) {
   const ref = useRef(null)
   const origin = useRef(null)
 
   usePointer(ref, {
     active: interactive,
     cursor: "move",
+    // Double-clicking a lone selection activates it (text → edit in place).
+    // Ambiguous for a group, so it only fires for a selection of one.
+    onDblClick: () => {
+      if (elements.length === 1) onActivate?.(elements[0].uuid)
+    },
     onDown: () => {
       origin.current = elements.map(el => ({ uuid: el.uuid, ...el.properties }))
     },

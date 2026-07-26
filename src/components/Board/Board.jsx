@@ -9,13 +9,21 @@ import Preview from '../Preview/Preview'
 // and receives all pointer/wheel input. The world div inside it is translated
 // and scaled by the camera; its children are positioned in world coordinates.
 
-export default function Board({boardRef, content, camera, toWorld, preview, selectedElements, getElement, updateElements, selectionInteractive}){
+export default function Board({boardRef, content, camera, toWorld, preview, selectedElements, getElement, updateElements, selectionInteractive, editingElement, onEditStart, onEditEnd}){
   // The SelectionBox works on effective geometry: bound line endpoints resolve
   // against the live content, so bounds/handles sit where the line renders.
   const lookup = (uuid) => content.find(el => el.uuid === uuid)
   const resolveElement = (el) => el.type === 'line'
     ? { ...el, properties: { ...el.properties, ...resolveLineEndpoints(el.properties, lookup) } }
     : el
+
+  // The in-place edit session, assembled here because Board already owns the
+  // write path. Edits go through updateElements like every other mutation.
+  const editing = editingElement && {
+    uuid: editingElement,
+    onChange: (content) => updateElements([{ uuid: editingElement, properties: { content } }]),
+    onEnd: onEditEnd,
+  }
 
   return (
     <div
@@ -28,7 +36,7 @@ export default function Board({boardRef, content, camera, toWorld, preview, sele
       }}
     >
       <div className={styles.world}>
-        {encodeContent(content)}
+        {encodeContent(content, editing)}
         {preview && <Preview {...preview} />}
         {selectedElements.length > 0 && <SelectionBox
           elements={selectedElements.map(getElement).filter(Boolean).map(resolveElement)}
@@ -37,6 +45,7 @@ export default function Board({boardRef, content, camera, toWorld, preview, sele
           updateElements={updateElements}
           hitTest={(wx, wy) => bindTargetAt(content, { x: wx, y: wy }, camera.zoom)}
           interactive={selectionInteractive}
+          onActivate={onEditStart}
         />}
       </div>
     </div>

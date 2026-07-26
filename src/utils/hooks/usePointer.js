@@ -4,10 +4,22 @@ import { useRef, useEffect } from "react";
 
 // Callback object  {
 //                    active,
-//                    onDown: (m) => {...},
-//                    onDrag: (m) => {...},
-//                    onUp: (m) => {...}
+//                    cursor,
+//                    onDown: (p, setCursor) => {...},
+//                    onMove: (p, setCursor) => {...},
+//                    onUp: (p, setCursor) => {...},
+//                    onClick / onDblClick / onCancel
 //                  }
+
+// Double-click is SYNTHESIZED from two clicks rather than taken from the native
+// `dblclick` event, and the bookkeeping is module-scoped on purpose: selecting
+// an element mounts the SelectionBox overlay on top of it, so the two clicks of
+// a double-click land on different DOM nodes owned by different usePointer
+// instances. A per-instance (or native) double-click can't survive that
+// hand-off; an app-wide "when/where was the last click" can.
+const DOUBLE_MS = 400;
+const DOUBLE_SLOP = 6;          // screen px — a double-click may drift slightly
+let lastClick = { time: 0, x: 0, y: 0 };
 
 export default function usePointer(ref, callback) {
   const pointer = useRef({
@@ -135,31 +147,28 @@ export default function usePointer(ref, callback) {
     sawDown.current = false;
     if (!sawGesture || pointer.current.hasDragged) return;
 
+    // Second click of a pair, close enough in time and space? Consume the pair
+    // (so a third click opens a fresh one) and report a double-click.
+    const now = performance.now();
+    const isDouble = now - lastClick.time < DOUBLE_MS
+      && Math.hypot(e.clientX - lastClick.x, e.clientY - lastClick.y) < DOUBLE_SLOP;
+    lastClick = isDouble ? { time: 0, x: 0, y: 0 } : { time: now, x: e.clientX, y: e.clientY };
+
     // Deliberately leaves isDown alone (false since the pointerup): a click is
     // not a gesture in progress, and re-marking it down would re-arm the
     // missed-pointerup safety net into a spurious onUp on the next hover move.
-    latestCallback.current.onClick?.(
-      pointer.current = {
-        ...pointer.current,
-        startX: e.clientX,
-        startY: e.clientY,
-        x: e.clientX,
-        y: e.clientY,
-    }, setCursor);
-  };
+    const p = pointer.current = {
+      ...pointer.current,
+      startX: e.clientX,
+      startY: e.clientY,
+      x: e.clientX,
+      y: e.clientY,
+    };
 
-  const handleDblClick = (e) => {
-    if (!latestCallback.current.active) return;
-
-    e.stopPropagation();
-    if (pointer.current.hasDragged) return;
-
-    latestCallback.current.onDblClick?.(
-      pointer.current = {
-        ...pointer.current,
-        x: e.clientX,
-        y: e.clientY,
-    }, setCursor);
+    // Falls back to onClick when this instance doesn't handle double-clicks, so
+    // a double-click on plain canvas still behaves like an ordinary click.
+    if (isDouble && latestCallback.current.onDblClick) latestCallback.current.onDblClick(p, setCursor);
+    else latestCallback.current.onClick?.(p, setCursor);
   };
 
 
@@ -176,7 +185,6 @@ export default function usePointer(ref, callback) {
     element.addEventListener('pointercancel', handleCancel);
     element.addEventListener('lostpointercapture', handleLostCapture);
     element.addEventListener('click', handleClick);
-    element.addEventListener('dblclick', handleDblClick);
 
     return () => {
       pointer.current.isDown = false;
@@ -188,7 +196,6 @@ export default function usePointer(ref, callback) {
       element.removeEventListener('pointercancel', handleCancel);
       element.removeEventListener('lostpointercapture', handleLostCapture);
       element.removeEventListener('click', handleClick);
-      element.removeEventListener('dblclick', handleDblClick);
     };
 
   }, [callback.active])
