@@ -8,12 +8,17 @@ import { resolveLineEndpoints } from "./lineGeometry"
 // stored properties aren't render-ready: bound endpoints resolve here against
 // the same content being encoded, so a line follows its targets by construction.
 //
+// `selectedElements` is the uuid list from useContent — the single source of
+// truth for selection. Elements don't store a `selected` flag; it's derived here
+// at render, so nothing can desync (and so a history snapshot is just content).
+//
 // `editing` is the optional in-place edit session — `{ uuid, onChange, onEnd }`
 // — handed to the one element it names (text only, today).
 
-export default function encodeContent(content, editing = null) {
+export default function encodeContent(content, selectedElements = [], editing = null) {
   const byId = new Map(content.map(el => [el.uuid, el]))
   const lookup = (uuid) => byId.get(uuid)
+  const selected = new Set(selectedElements)
 
   return content.map(el => {
     switch (el.type) {
@@ -22,7 +27,7 @@ export default function encodeContent(content, editing = null) {
         return <Shape
           key={el.uuid}
           uuid={el.uuid}
-          selected={el.selected}
+          selected={selected.has(el.uuid)}
           type={el.type}
           properties={el.properties}
         />
@@ -31,7 +36,7 @@ export default function encodeContent(content, editing = null) {
         return <Line
           key={el.uuid}
           uuid={el.uuid}
-          selected={el.selected}
+          selected={selected.has(el.uuid)}
           properties={{ ...el.properties, ...resolveLineEndpoints(el.properties, lookup) }}
         />
 
@@ -39,7 +44,7 @@ export default function encodeContent(content, editing = null) {
         return <Text
           key={el.uuid}
           uuid={el.uuid}
-          selected={el.selected}
+          selected={selected.has(el.uuid)}
           properties={el.properties}
           editing={editing?.uuid === el.uuid ? editing : null}
         />

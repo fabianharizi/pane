@@ -21,7 +21,7 @@ export default function App(){
   const boardRef = useRef(null);
 
   const [activeTool, setActiveTool] = useState("select");
-  const {content, selectedElements, getElement, addElements, selectElements, updateElements, deleteElements, clearContent} = useContent([]);
+  const {content, selectedElements, getElement, addElements, selectElements, updateElements, deleteElements, clearContent, undo, redo, canUndo, canRedo} = useContent([]);
   const {camera, panBy, zoomTo, toWorld} = useCamera(boardRef);
   const {preview, enablePreview, disablePreview} = usePreview();
 
@@ -42,7 +42,7 @@ export default function App(){
 
   // The command registry: every app verb declared once (delete/copy/cut/paste/
   // duplicate/zoom...), consumed by shortcuts, ZoomBar, and future menus.
-  const {commands, runCommand} = useCommands({ selectedElements, getElement, addElements, deleteElements, camera, zoomTo });
+  const {commands, runCommand} = useCommands({ selectedElements, getElement, addElements, deleteElements, camera, zoomTo, undo, redo, canUndo, canRedo });
 
   useEffect(() => {
     if (selectedElements.length && !SELECTION_TOOLS.includes(activeTool)) selectElements([]);

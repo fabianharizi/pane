@@ -15,7 +15,7 @@ import { resolveLineEndpoints } from "../methods/lineGeometry";
 // Commands are verbs (fire-and-forget). Tools are modes and stay in toolset.js;
 // a command MAY activate a mode, never the reverse.
 
-export default function useCommands({ selectedElements, getElement, addElements, deleteElements, camera, zoomTo }) {
+export default function useCommands({ selectedElements, getElement, addElements, deleteElements, camera, zoomTo, undo, redo, canUndo, canRedo }) {
   // Clipboard is copy/paste-internal state — it lives here, not in App.
   const clipboard = useRef(null);
 
@@ -78,6 +78,22 @@ export default function useCommands({ selectedElements, getElement, addElements,
   };
 
   const commands = [
+    // History first — this is also the order a future menu renders in.
+    // useContent coalesces writes, so one drag or typing burst is one step.
+    {
+      id: "undo",
+      label: "Undo",
+      shortcut: "ctrl+z",
+      enabled: () => canUndo,
+      run: undo,
+    },
+    {
+      id: "redo",
+      label: "Redo",
+      shortcut: ["ctrl+shift+z", "ctrl+y"],
+      enabled: () => canRedo,
+      run: redo,
+    },
     {
       id: "delete",
       label: "Delete",

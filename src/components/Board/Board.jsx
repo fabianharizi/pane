@@ -36,7 +36,7 @@ export default function Board({boardRef, content, camera, toWorld, preview, sele
       }}
     >
       <div className={styles.world}>
-        {encodeContent(content, editing)}
+        {encodeContent(content, selectedElements, editing)}
         {preview && <Preview {...preview} />}
         {selectedElements.length > 0 && <SelectionBox
           elements={selectedElements.map(getElement).filter(Boolean).map(resolveElement)}

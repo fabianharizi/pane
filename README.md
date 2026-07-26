@@ -30,6 +30,7 @@ Because each pane is isolated in its own iframe, generated code can be fully int
 - **Infinite canvas with a camera** — pan anywhere, zoom 10%–800% anchored at the cursor; wheel pans, Shift+wheel pans horizontally, Ctrl/⌘+wheel (or trackpad pinch) zooms; grid and origin crosshair stay crisp at any zoom
 - **DOM-based elements** — every canvas object is a real DOM node in a transformed "world" div; the browser does all the coordinate mapping
 - **Selection** — click- and marquee-select any number of elements; one group selection box with move, proportional resize (Shift locks aspect), and rotation (Shift snaps to 15°)
+- **Undo / redo** — `Ctrl+Z` / `Ctrl+Shift+Z`, where one drag or one burst of typing is a single step (writes coalesce, so undo never rewinds a mouse-move frame at a time)
 - **Editable text** — double-click a text element to edit it in place
 - **Properties panel** — live editing of the selected element's geometry and style
 - **Connector lines** — line endpoints attach to an element's edge and stay glued through move, resize, and rotate; straight, curved, or elbow routing with arrowheads; copy/paste keeps connections within the copied set, and deleting a target leaves the line frozen in place
@@ -85,4 +86,3 @@ npm run lint     # eslint
 - [ ] Generation flow: prompt input → Claude → new pane on the canvas
 - [ ] Pane lifecycle: regenerate, edit prompt, pin/resize behaviors
 - [ ] Canvas persistence (save / load)
-- [ ] Undo / redo
