@@ -93,6 +93,12 @@ const normalize = (dx, dy) => {
 // How far an elbow route stubs straight out of a bound side before turning.
 const ELBOW_STUB = 20
 
+// How far an UNBOUND curved end leans off the straight path, as a fraction of
+// its control reach. An unbound end has no side to leave from, and aiming its
+// control point straight along the segment collapses the curve into a line —
+// this is the perpendicular blended in to keep it visibly curved. Higher = bowier.
+const UNBOUND_BOW = 0.5
+
 // Axis direction an elbow leaves an endpoint with: the bound side's unrotated
 // normal, or (unbound) the dominant axis toward the other endpoint.
 const elbowDir = (side, from, toward) => {
@@ -120,8 +126,17 @@ export function buildRoute(resolved, routing) {
     const dist = Math.hypot(p1.x - p0.x, p1.y - p0.y)
     const reach = clampNum(dist / 2, 30, 200)
     const seg = normalize(p1.x - p0.x, p1.y - p0.y) ?? { x: 1, y: 0 }
-    const d0 = resolved.startDir ?? seg
-    const d1 = resolved.endDir ?? { x: -seg.x, y: -seg.y }
+
+    // Both unbound ends lean toward the SAME perpendicular side, which bows the
+    // curve symmetrically. (Leaning them opposite ways would S-bend it; leaning
+    // neither — the old behaviour — drew a straight line.) A bound end ignores
+    // this and leaves along its side's outward normal, as before.
+    const perp = { x: -seg.y, y: seg.x }
+    const bowed = (along) =>
+      normalize(along.x + perp.x * UNBOUND_BOW, along.y + perp.y * UNBOUND_BOW) ?? along
+
+    const d0 = resolved.startDir ?? bowed(seg)
+    const d1 = resolved.endDir ?? bowed({ x: -seg.x, y: -seg.y })
     return {
       kind: "cubic",
       pts: [
