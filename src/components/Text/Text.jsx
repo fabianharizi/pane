@@ -43,13 +43,13 @@ export default function Text({
   }, [isEditing])
 
   return(
-      <div className={editing ? `${styles.text} ${styles.editing}` : styles.text}
+      <pre className={editing ? `${styles.text} ${styles.editing}` : styles.text}
         data-uuid={uuid} data-selected={selected} style={{
         "--x": coords.x + "px",
         "--y": coords.y + "px",
         "--width": (coords.width > 10) ? coords.width + "px" : "min-content",
         "--height":(coords.height > 10) ?  coords.height + "px" : "min-content",
-        "--rotation": p.rotation + "deg"
+        "--rotation": p.rotation + "deg",
       }}>{editing
         ? <textarea
             ref={editor}
@@ -66,6 +66,6 @@ export default function Text({
             onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => e.stopPropagation()}
           />
-        : p.content}</div>
+        : p.content}</pre>
   )
 }

@@ -1,11 +1,13 @@
 .text{
+  display: block;
   position: absolute;
   top: var(--y);
   left: var(--x);
   width: var(--width);
   height: var(--height);
   color: #fff;
-
+  margin: 0;
+  padding: 0;
   /* Rotation is about the element's center (default transform-origin). */
   rotate: var(--rotation, 0deg);
 }
