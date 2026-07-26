@@ -26,18 +26,46 @@ const handleOffset = (pos) => ({
   y: pos.includes("n") ? 0 : pos.includes("s") ? 100 : 50,
 })
 
-// Bounding box over every element's raw corners (world coords). One element is
-// just a group of one — same math for any count. NOTE: deliberately ignores
-// per-element rotation (uses the unrotated footprint) — see CLAUDE.md.
-const boundsOf = (elements) => elements.reduce((b, el) => {
+// The two stored corners — enough to bound anything unrotated.
+const rawCorners = (el) => [
+  { x: el.properties.startX, y: el.properties.startY },
+  { x: el.properties.endX, y: el.properties.endY },
+]
+
+// Every corner in world space. A rotated box element's visual footprint is its
+// rotated rectangle, so all four corners matter; lines have no rotation property
+// (their endpoints ARE their direction) and unrotated boxes need only two.
+const cornersOf = (el) => {
+  const rotation = el.type === "line" ? 0 : (el.properties.rotation ?? 0)
+  if (!rotation) return rawCorners(el)
+
   const { startX, startY, endX, endY } = el.properties
+  const c = { x: (startX + endX) / 2, y: (startY + endY) / 2 }
+  return [
+    { x: startX, y: startY }, { x: endX, y: startY },
+    { x: endX, y: endY }, { x: startX, y: endY },
+  ].map(p => rotatePoint(p, c, rotation))
+}
+
+// Bounding box over the selection (world coords). One element is just a group of
+// one — same math for any count.
+//
+// `rotated` selects WHICH footprint, and the distinction is load-bearing: an
+// axis-aligned box (any group) must cover each member's ROTATED corners or
+// rotated members poke outside the chrome, whereas a lone box element's chrome
+// rotates *with* it — there the bounds have to stay in the element's own
+// unrotated frame, otherwise the rotation gets applied twice.
+const boundsOf = (elements, rotated = true) => {
+  const points = elements.flatMap(el => (rotated ? cornersOf(el) : rawCorners(el)))
+  const xs = points.map(p => p.x)
+  const ys = points.map(p => p.y)
   return {
-    left: Math.min(b.left, startX, endX),
-    top: Math.min(b.top, startY, endY),
-    right: Math.max(b.right, startX, endX),
-    bottom: Math.max(b.bottom, startY, endY),
+    left: Math.min(...xs),
+    top: Math.min(...ys),
+    right: Math.max(...xs),
+    bottom: Math.max(...ys),
   }
-}, { left: Infinity, top: Infinity, right: -Infinity, bottom: -Infinity })
+}
 
 // Rotation is stored in degrees, about the element center. The angle helpers
 // (rad/deg/rotatePoint) are shared with connector geometry — see lineGeometry.
@@ -94,8 +122,6 @@ const mapCoord = (v, oldMin, oldSize, newMin, newSize) =>
 // a lone selection is double-clicked — the box covers the element, so this
 // overlay is the only thing that can see that gesture.
 export default function SelectionBox({ elements, zoom, toWorld, updateElements, hitTest, interactive, onActivate }) {
-  const box = boundsOf(elements)
-
   // Bind candidate under an endpoint drag — rendered as a highlight so the
   // user sees which element the endpoint will attach to on release.
   const [bindCandidate, setBindCandidate] = useState(null)
@@ -111,9 +137,20 @@ export default function SelectionBox({ elements, zoom, toWorld, updateElements, 
   // in the element's local frame. Groups keep an axis-aligned box (rotation 0).
   const rotation = !loneLine && elements.length === 1 ? (elements[0].properties.rotation ?? 0) : 0
 
+  // Only the rotating-chrome case measures in the element's local frame; every
+  // other selection needs bounds that cover rotated footprints — see boundsOf.
+  const coverRotated = rotation === 0
+  const box = boundsOf(elements, coverRotated)
+
   return (
     <div
-      className={interactive ? `${styles.box} ${styles.interactive}` : styles.box}
+      className={[
+        styles.box,
+        interactive && styles.interactive,
+        // A lone line's box is just its endpoints' bbox — meaningless as a
+        // frame, so the outline is hidden and only the endpoint dots show.
+        loneLine && styles.bare,
+      ].filter(Boolean).join(" ")}
       ref={bodyRef}
       style={{
         "--x": box.left + "px",
@@ -127,7 +164,7 @@ export default function SelectionBox({ elements, zoom, toWorld, updateElements, 
         ? <LineHandles element={loneLine} zoom={zoom} updateElements={updateElements} box={box} hitTest={hitTest} onCandidate={setBindCandidate} />
         : <>
             {HANDLES.map((h) => (
-              <BoxHandle key={h.pos} spec={h} elements={elements} zoom={zoom} rotation={rotation} updateElements={updateElements} />
+              <BoxHandle key={h.pos} spec={h} elements={elements} zoom={zoom} rotation={rotation} coverRotated={coverRotated} updateElements={updateElements} />
             ))}
             <RotateHandle elements={elements} toWorld={toWorld} updateElements={updateElements} />
           </>)}
@@ -183,7 +220,7 @@ function useBodyDrag(elements, zoom, updateElements, interactive, onActivate) {
 // A resize handle. Dragging it resizes the group box, and every element's raw
 // corners are mapped proportionally into the new box — one code path whether
 // the selection holds one element or many.
-function BoxHandle({ spec, elements, zoom, rotation, updateElements }) {
+function BoxHandle({ spec, elements, zoom, rotation, coverRotated, updateElements }) {
   const ref = useRef(null)
   const origin = useRef(null)   // group box + member corners snapshotted at drag start
   const off = handleOffset(spec.pos)
@@ -193,7 +230,9 @@ function BoxHandle({ spec, elements, zoom, rotation, updateElements }) {
     cursor: spec.cursor,
     onDown: () => {
       origin.current = {
-        box: boundsOf(elements),
+        // Must match the box that was RENDERED, or the handle would resize
+        // relative to a different rectangle than the one being dragged.
+        box: boundsOf(elements, coverRotated),
         members: elements.map(el => ({ uuid: el.uuid, ...el.properties })),
         rotation,
       }

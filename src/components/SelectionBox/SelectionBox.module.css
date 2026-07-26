@@ -16,6 +16,14 @@
   pointer-events: none;
 }
 
+/* A lone line: its box is only the endpoints' bounding box, so as a frame it's
+   noise — the endpoint dots are the real affordance. Transparent rather than
+   `border: none` so the box geometry (and the handle offsets measured inside it)
+   doesn't shift by a pixel. The div still catches body-drag. */
+.box.bare{
+  border-color: transparent;
+}
+
 /* Interactive (select tool): the interior is the body-drag target. */
 .box.interactive{
   pointer-events: auto;
