@@ -1,5 +1,10 @@
 .text{
-  display: block;
+  /* Grid (not block) so the content can be aligned on the BLOCK axis:
+     align-content places the single row within the element's height, which is
+     the only reliable way to vertically center/bottom-align wrapped text. */
+  display: grid;
+  align-content: var(--vertical, start);
+  text-align: var(--horizontal, left);
   position: absolute;
   top: var(--y);
   left: var(--x);
@@ -8,6 +13,9 @@
   color: #fff;
   margin: 0;
   padding: 0;
+  white-space: pre-wrap;
+  overflow-wrap: break-word; /* Legacy alias: word-wrap: break-word */
+  
   /* Rotation is about the element's center (default transform-origin). */
   rotate: var(--rotation, 0deg);
 }
@@ -17,6 +25,12 @@
 .text.editing{
   min-width: 6ch;
   min-height: 1.2em;
+
+  /* Let the row fill the height so the textarea (height: 100%) covers the whole
+     box and the caret is reachable anywhere in it. A textarea always lays its
+     own text out from the top, so `vertical` doesn't apply mid-edit — the text
+     jumps back into alignment when the session closes. */
+  align-content: stretch;
 }
 
 /* The in-place editor has to be visually identical to the static text: no

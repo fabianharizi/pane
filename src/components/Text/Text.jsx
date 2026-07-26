@@ -6,6 +6,12 @@ import styles from "./Text.module.css"
 // It's handed down from Board (which owns the uuid match) so the component
 // stays dumb — it renders a textarea instead of static text and reports
 // changes; it never decides when editing starts or stops.
+//
+// Alignment: `horizontal` (left/center/right) feeds `text-align` directly;
+// `vertical` (top/middle/bottom) is a grid `align-content`, so the stored words
+// map to CSS keywords here rather than storing CSS in the data.
+
+const VERTICAL = { top: "start", middle: "center", bottom: "end" }
 
 export default function Text({
   uuid, selected,
@@ -16,6 +22,8 @@ export default function Text({
   const p = {
     content: "Lorem ipsum dolor sit amet",
     rotation: 0,
+    horizontal: "left",
+    vertical: "top",
     ...properties
   }
 
@@ -43,13 +51,15 @@ export default function Text({
   }, [isEditing])
 
   return(
-      <pre className={editing ? `${styles.text} ${styles.editing}` : styles.text}
+      <div className={editing ? `${styles.text} ${styles.editing}` : styles.text}
         data-uuid={uuid} data-selected={selected} style={{
         "--x": coords.x + "px",
         "--y": coords.y + "px",
         "--width": (coords.width > 10) ? coords.width + "px" : "min-content",
         "--height":(coords.height > 10) ?  coords.height + "px" : "min-content",
         "--rotation": p.rotation + "deg",
+        "--horizontal": p.horizontal,
+        "--vertical": VERTICAL[p.vertical] ?? "start",
       }}>{editing
         ? <textarea
             ref={editor}
@@ -66,6 +76,6 @@ export default function Text({
             onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => e.stopPropagation()}
           />
-        : p.content}</pre>
+        : p.content}</div>
   )
 }

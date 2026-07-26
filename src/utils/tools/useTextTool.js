@@ -35,7 +35,9 @@ export default function useTextTool(ref, active, toWorld, enablePreview, disable
         properties: {
           ...coords,
           content: "Lorem ipsum dolor sit amet",
-          rotation: 0
+          rotation: 0,
+          horizontal: "left",
+          vertical: "top"
         }
       }])
       disablePreview()

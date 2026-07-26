@@ -16,7 +16,7 @@ const SCHEMA = {
   rectangle: ["position", "size", "rotation", "fill", "strokeColor", "strokeWidth", "strokeStyle", "borderRadius", "opacity"],
   oval:      ["position", "size", "rotation", "fill", "strokeColor", "strokeWidth", "strokeStyle", "opacity"],
   line:      ["start", "end", "routing", "strokeColor", "strokeWidth", "strokeStyle", "headStart", "headEnd"],
-  text:      ["position", "size", "rotation", "content"],
+  text:      ["position", "size", "rotation", "horizontal", "vertical", "content"],
 }
 
 // Mirrors the per-component defaults, so an absent property still shows a value.
@@ -29,6 +29,8 @@ const DEFAULTS = {
   opacity: 1,
   rotation: 0,
   content: "",
+  horizontal: "left",
+  vertical: "top",
   routing: "straight",
   headStart: "none",
   headEnd: "arrow",
@@ -96,6 +98,8 @@ const FIELDS = {
   strokeColor:  { label: "Stroke",        type: "color", nullable: true },
   strokeWidth:  { label: "Stroke width",  type: "number", min: 0, max: 50,  step: 1 },
   strokeStyle:  { label: "Stroke style",  type: "select", options: ["solid", "dashed", "dotted"] },
+  horizontal:   { label: "Horizontal",    type: "select", options: ["left", "center", "right"] },
+  vertical:     { label: "Vertical",      type: "select", options: ["top", "middle", "bottom"] },
   routing:      { label: "Routing",       type: "select", options: ["straight", "curved", "elbow"] },
   headStart:    { label: "Start head",    type: "select", options: ["none", "arrow"] },
   headEnd:      { label: "End head",      type: "select", options: ["none", "arrow"] },
