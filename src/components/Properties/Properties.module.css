@@ -13,6 +13,11 @@
 
   color: #e8e8e8;
   font-size: 13px;
+
+  /* Native widgets inside the panel (select popups, number spinners, scrollbars,
+     the colour picker's chrome) are drawn by the browser, not by our CSS — this
+     is what tells it to draw them dark. Inherits to every descendant. */
+  color-scheme: dark;
 }
 
 .header{
@@ -119,6 +124,14 @@
 }
 .input:focus{
   border-color: #6c6cff;
+}
+
+/* Belt-and-braces for the dropdown list: browsers that honour <option> colours
+   but not color-scheme get the dark background this way. Matches the custom
+   iconSelect menu so both kinds of dropdown look the same. */
+.input option{
+  background-color: #232326;
+  color: #e8e8e8;
 }
 
 .textarea{
