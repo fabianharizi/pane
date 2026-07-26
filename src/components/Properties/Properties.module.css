@@ -182,6 +182,130 @@
   border-radius: 2px;
 }
 
+/* Two controls sharing one row. Spans both grid columns (so it gets the label's
+   width too) because two groups of three buttons can't fit in the value column
+   alone — the icons are self-explanatory, so the row goes unlabelled. */
+.combo{
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  min-width: 0;
+}
+
+/* Segmented icon buttons — radio semantics, styled as one control */
+.iconGroup{
+  display: flex;
+  gap: 2px;
+  min-width: 0;
+  padding: 2px;
+  border-radius: 3px;
+  border: 1px solid #ffffff26;
+  background-color: #0003;
+}
+
+.iconButton{
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px;
+  border: 0;
+  border-radius: 2px;
+  background: transparent;
+  color: #ffffff99;
+  cursor: pointer;
+  transition: 0.15s ease;
+}
+.iconButton:hover{
+  background-color: #ffffff1a;
+  color: #e8e8e8;
+}
+.iconButtonActive{
+  background-color: #6c6cff;
+  color: #fff;
+}
+.iconButtonActive:hover{
+  background-color: #6c6cff;
+  color: #fff;
+}
+
+/* Dropdown of drawn options (a native <select> can't render SVG) */
+.iconSelect{
+  position: relative;
+  min-width: 0;
+}
+
+.iconTrigger{
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  padding: 3px 6px;
+  border-radius: 3px;
+  border: 1px solid #ffffff26;
+  background-color: #0003;
+  color: #e8e8e8;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+.iconTrigger:hover{
+  border-color: #ffffff4d;
+}
+.iconTrigger[aria-expanded="true"]{
+  border-color: #6c6cff;
+}
+
+.chevron{
+  flex: none;
+  color: #ffffff66;
+}
+
+/* Opaque on purpose: the panel itself is translucent, and stacked transparency
+   would make the menu unreadable over canvas content. */
+.menu{
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  margin: 0;
+  padding: 3px;
+  list-style: none;
+  border-radius: 4px;
+  border: 1px solid #ffffff26;
+  background-color: #232326;
+  box-shadow: 0 6px 18px #00000073;
+}
+
+.menuItem{
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 6px;
+  border: 0;
+  border-radius: 2px;
+  background: transparent;
+  color: #ffffffcc;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: 0.15s ease;
+}
+.menuItem:hover{
+  background-color: #ffffff1a;
+  color: #e8e8e8;
+}
+.menuItemActive{
+  background-color: #6c6cff;
+  color: #fff;
+}
+
 .range{
   display: flex;
   align-items: center;

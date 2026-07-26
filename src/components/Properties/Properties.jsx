@@ -1,7 +1,17 @@
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
+import {
+  AlignLeft, AlignCenter, AlignRight,
+  AlignStartHorizontal, AlignCenterHorizontal, AlignEndHorizontal,
+  ChevronDown, Italic, Type,
+} from "lucide-react"
 import styles from "./Properties.module.css"
 import { resolveLineEndpoints } from "../../utils/methods/lineGeometry"
-import { FONT_FAMILIES, WEIGHTS } from "../../utils/methods/fonts"
+import { FONT_FAMILIES, WEIGHTS, fontStack } from "../../utils/methods/fonts"
+import {
+  StrokeSolid, StrokeDashed, StrokeDotted,
+  HeadNone, HeadArrowStart, HeadArrowEnd,
+  RouteStraight, RouteCurved, RouteElbow,
+} from "./icons"
 
 // Which properties each element type exposes, in display order.
 // Only properties the components actually render are listed:
@@ -17,7 +27,8 @@ const SCHEMA = {
   rectangle: ["position", "size", "rotation", "fill", "strokeColor", "strokeWidth", "strokeStyle", "borderRadius", "opacity"],
   oval:      ["position", "size", "rotation", "fill", "strokeColor", "strokeWidth", "strokeStyle", "opacity"],
   line:      ["start", "end", "routing", "strokeColor", "strokeWidth", "strokeStyle", "headStart", "headEnd"],
-  text:      ["position", "size", "rotation", "fontFamily", "fontSize", "fontWeight", "fontStyle", "horizontal", "vertical", "content"],
+  // `align` is one row holding the horizontal and vertical icon groups.
+  text:      ["position", "size", "rotation", "fontFamily", "fontSize", "fontWeight", "fontStyle", "align", "content"],
 }
 
 // Mirrors the per-component defaults, so an absent property still shows a value.
@@ -42,6 +53,10 @@ const DEFAULTS = {
 }
 
 const num = (v) => (typeof v === "number" && Number.isFinite(v) ? v : 0)
+
+// Field types whose row can't be a <label>: they hold several controls, or
+// buttons rather than a labelable input.
+const MULTI_CONTROL = new Set(["pair", "combo", "icons", "iconSelect"])
 
 // A "pair" field renders two number inputs on one row. Each part derives its value
 // from the stored corners (`get`) and returns the corner patch to write (`set`),
@@ -102,16 +117,82 @@ const FIELDS = {
   fill:         { label: "Fill",          type: "color", nullable: true },
   strokeColor:  { label: "Stroke",        type: "color", nullable: true },
   strokeWidth:  { label: "Stroke width",  type: "number", min: 0, max: 50,  step: 1 },
-  strokeStyle:  { label: "Stroke style",  type: "select", options: ["solid", "dashed", "dotted"] },
-  fontFamily:   { label: "Font",          type: "select", options: FONT_FAMILIES },
-  fontSize:     { label: "Font size",     type: "number", min: 1, max: 400, step: 1 },
-  fontWeight:   { label: "Weight",        type: "select", options: WEIGHTS },
-  fontStyle:    { label: "Style",         type: "select", options: ["normal", "italic"] },
-  horizontal:   { label: "Horizontal",    type: "select", options: ["left", "center", "right"] },
-  vertical:     { label: "Vertical",      type: "select", options: ["top", "middle", "bottom"] },
-  routing:      { label: "Routing",       type: "select", options: ["straight", "curved", "elbow"] },
-  headStart:    { label: "Start head",    type: "select", options: ["none", "arrow"] },
-  headEnd:      { label: "End head",      type: "select", options: ["none", "arrow"] },
+  // `iconSelect` = dropdown whose items are drawn previews; `icons` = a
+  // segmented row of buttons (radio semantics, one visible choice).
+  strokeStyle: {
+    label: "Stroke style", type: "iconSelect",
+    options: [
+      { value: "solid",  icon: StrokeSolid,  title: "Solid" },
+      { value: "dashed", icon: StrokeDashed, title: "Dashed" },
+      { value: "dotted", icon: StrokeDotted, title: "Dotted" },
+    ],
+  },
+
+  // Each option previews itself — the family in its own face, the weight at its
+  // own weight (in the element's current family, since weight reads differently
+  // per typeface).
+  fontFamily: {
+    label: "Font", type: "select", options: FONT_FAMILIES,
+    optionStyle: (family) => ({ fontFamily: fontStack(family) }),
+  },
+  fontSize:   { label: "Font size", type: "number", min: 1, max: 400, step: 1 },
+  fontWeight: {
+    label: "Weight", type: "select", options: WEIGHTS,
+    optionStyle: (weight, properties) => ({
+      fontWeight: weight,
+      fontFamily: fontStack(properties.fontFamily ?? DEFAULTS.fontFamily),
+    }),
+  },
+  fontStyle: {
+    label: "Style", type: "icons",
+    options: [
+      { value: "normal", icon: Type,   title: "Normal" },
+      { value: "italic", icon: Italic, title: "Italic" },
+    ],
+  },
+
+  horizontal: {
+    label: "Horizontal", type: "icons",
+    options: [
+      { value: "left",   icon: AlignLeft,   title: "Align left" },
+      { value: "center", icon: AlignCenter, title: "Align center" },
+      { value: "right",  icon: AlignRight,  title: "Align right" },
+    ],
+  },
+  vertical: {
+    label: "Vertical", type: "icons",
+    options: [
+      { value: "top",    icon: AlignStartHorizontal,  title: "Align top" },
+      { value: "middle", icon: AlignCenterHorizontal, title: "Align middle" },
+      { value: "bottom", icon: AlignEndHorizontal,    title: "Align bottom" },
+    ],
+  },
+  // Unlabelled and full-width: two groups of three need the room, and alignment
+  // icons are self-evident (every design tool ships them bare).
+  align: { type: "combo", fields: ["horizontal", "vertical"] },
+
+  routing: {
+    label: "Routing", type: "icons",
+    options: [
+      { value: "straight", icon: RouteStraight, title: "Straight" },
+      { value: "curved",   icon: RouteCurved,   title: "Curved" },
+      { value: "elbow",    icon: RouteElbow,    title: "Elbow" },
+    ],
+  },
+  headStart: {
+    label: "Start head", type: "iconSelect",
+    options: [
+      { value: "none",  icon: HeadNone,       title: "None" },
+      { value: "arrow", icon: HeadArrowStart, title: "Arrow" },
+    ],
+  },
+  headEnd: {
+    label: "End head", type: "iconSelect",
+    options: [
+      { value: "none",  icon: HeadNone,     title: "None" },
+      { value: "arrow", icon: HeadArrowEnd, title: "Arrow" },
+    ],
+  },
   rotation:     { label: "Rotation",      type: "number", step: 1 },
   borderRadius: { label: "Corner radius", type: "number", min: 0, max: 500, step: 1 },
   opacity:      { label: "Opacity",       type: "range",  min: 0, max: 1,   step: 0.05 },
@@ -201,8 +282,106 @@ function NumberInput({ value, min, max, step, className, onCommit }) {
   )
 }
 
+// A dropdown whose options are drawn, not written — a native <select> can't
+// render SVG, so this is a button plus a popup listbox. Closes on outside
+// press, Escape, or a choice.
+function IconSelect({ value, options, label, onCommit }) {
+  const [open, setOpen] = useState(false)
+  const root = useRef(null)
+
+  useEffect(() => {
+    if (!open) return
+    const onPress = (e) => { if (!root.current?.contains(e.target)) setOpen(false) }
+    const onKey = (e) => { if (e.key === "Escape") setOpen(false) }
+    document.addEventListener("pointerdown", onPress)
+    document.addEventListener("keydown", onKey)
+    return () => {
+      document.removeEventListener("pointerdown", onPress)
+      document.removeEventListener("keydown", onKey)
+    }
+  }, [open])
+
+  const current = options.find((o) => o.value === value) ?? options[0]
+  const Current = current.icon
+
+  return (
+    <div className={styles.iconSelect} ref={root}>
+      <button
+        type="button"
+        className={styles.iconTrigger}
+        title={current.title}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={`${label}: ${current.title}`}
+        onClick={() => setOpen((o) => !o)}
+      >
+        <Current size={16} />
+        <ChevronDown size={12} className={styles.chevron} />
+      </button>
+
+      {open && (
+        <ul className={styles.menu} role="listbox" aria-label={label}>
+          {options.map((option) => {
+            const Icon = option.icon
+            const active = option.value === value
+            return (
+              <li key={option.value} role="option" aria-selected={active}>
+                <button
+                  type="button"
+                  className={active ? `${styles.menuItem} ${styles.menuItemActive}` : styles.menuItem}
+                  onClick={() => { onCommit(option.value); setOpen(false) }}
+                >
+                  <Icon size={16} />
+                  <span>{option.title}</span>
+                </button>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+    </div>
+  )
+}
+
+// A segmented row of icon buttons — one choice visible at a glance, no popup.
+function IconGroup({ value, options, label, onCommit }) {
+  return (
+    <div className={styles.iconGroup} role="radiogroup" aria-label={label}>
+      {options.map((option) => {
+        const Icon = option.icon
+        const active = option.value === value
+        return (
+          <button
+            key={option.value}
+            type="button"
+            role="radio"
+            aria-checked={active}
+            className={active ? `${styles.iconButton} ${styles.iconButtonActive}` : styles.iconButton}
+            title={option.title}
+            onClick={() => onCommit(option.value)}
+          >
+            <Icon size={15} />
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
 function Field({ name, properties, onPatch }) {
   const field = FIELDS[name]
+
+  // Composite row: render the named sub-fields side by side. Recurses, so a
+  // combo can hold any field type (both of today's are icon groups).
+  if (field.type === "combo") {
+    return (
+      <div className={styles.combo}>
+        {field.fields.map((sub) => (
+          <Field key={sub} name={sub} properties={properties} onPatch={onPatch} />
+        ))}
+      </div>
+    )
+  }
 
   // Pair fields own their own read/write per part.
   if (field.type === "pair") {
@@ -255,15 +434,28 @@ function Field({ name, properties, onPatch }) {
         </div>
       )
 
+    case "icons":
+      return <IconGroup value={value} options={field.options} label={field.label} onCommit={onChange} />
+
+    case "iconSelect":
+      return <IconSelect value={value} options={field.options} label={field.label} onCommit={onChange} />
+
     case "select":
+      // `optionStyle` lets an option preview itself (a family in its own face, a
+      // weight at its own weight). Applied to the closed control too, so the
+      // current choice previews without opening it. Styled <option>s render in
+      // Chrome/Edge/Firefox; Safari ignores them and shows plain text.
       return (
         <select
           className={styles.input}
           value={value}
+          style={field.optionStyle?.(value, properties)}
           onChange={(e) => onChange(e.target.value)}
         >
           {field.options.map((option) => (
-            <option key={option} value={option}>{option}</option>
+            <option key={option} value={option} style={field.optionStyle?.(option, properties)}>
+              {option}
+            </option>
           ))}
         </select>
       )
@@ -307,12 +499,15 @@ export default function Properties({ selectedElements, getElement, updateElement
       {/* keyed by uuid so each element gets fresh inputs (no stale NumberInput drafts) */}
       <div className={styles.fields} key={element.uuid}>
         {fields.map((name) => {
-          // A <label> may only wrap a single control, so pairs use a plain row.
-          const Row = FIELDS[name].type === "pair" ? "div" : "label"
+          const field = FIELDS[name]
+          // A <label> may only wrap a single labelable control, which rules out
+          // multi-control rows and the button-based ones (those carry their own
+          // aria-label / title instead).
+          const Row = MULTI_CONTROL.has(field.type) ? "div" : "label"
 
           return (
             <Row key={name} className={styles.field}>
-              <span className={styles.label}>{FIELDS[name].label}</span>
+              {field.label && <span className={styles.label}>{field.label}</span>}
               <Field
                 name={name}
                 properties={element.properties}
