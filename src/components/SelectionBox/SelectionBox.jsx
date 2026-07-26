@@ -1,6 +1,7 @@
 import styles from "./SelectionBox.module.css"
 import usePointer from './../../utils/hooks/usePointer';
-import { useRef } from "react";
+import { useRef, useState } from "react";
+import { rad, deg, rotatePoint } from "../../utils/methods/lineGeometry";
 
 // Smallest the selection box may be resized to, in SCREEN px (divided by zoom
 // at use, so the minimum feels constant at any zoom). Prevents collapse/flip.
@@ -38,21 +39,9 @@ const boundsOf = (elements) => elements.reduce((b, el) => {
   }
 }, { left: Infinity, top: Infinity, right: -Infinity, bottom: -Infinity })
 
-// Angle helpers. Rotation is stored in degrees, about the element center.
-const rad = (d) => d * Math.PI / 180
-const deg = (r) => r * 180 / Math.PI
+// Rotation is stored in degrees, about the element center. The angle helpers
+// (rad/deg/rotatePoint) are shared with connector geometry — see lineGeometry.
 const snap15 = (d) => Math.round(d / 15) * 15
-
-// Rotate point p about center c by `degrees`.
-const rotatePoint = (p, c, degrees) => {
-  const a = rad(degrees)
-  const dx = p.x - c.x
-  const dy = p.y - c.y
-  return {
-    x: c.x + dx * Math.cos(a) - dy * Math.sin(a),
-    y: c.y + dx * Math.sin(a) + dy * Math.cos(a),
-  }
-}
 
 // Resize the group box by moving the handle's edges, clamped to minSize (world
 // units) so it can never cross its anchor edge (no flip).
@@ -100,9 +89,14 @@ const mapCoord = (v, oldMin, oldSize, newMin, newSize) =>
 
 // `interactive` gates all dragging: only the select tool may resize/move/rotate.
 // `zoom` converts pointer deltas (screen px) into world units; `toWorld` converts
-// absolute pointer positions (needed for rotation angles).
-export default function SelectionBox({ elements, zoom, toWorld, updateElements, interactive }) {
+// absolute pointer positions (needed for rotation angles). `hitTest` finds the
+// bindable element under a dragged line endpoint.
+export default function SelectionBox({ elements, zoom, toWorld, updateElements, hitTest, interactive }) {
   const box = boundsOf(elements)
+
+  // Bind candidate under an endpoint drag — rendered as a highlight so the
+  // user sees which element the endpoint will attach to on release.
+  const [bindCandidate, setBindCandidate] = useState(null)
 
   // Body-drag: dragging the container interior moves the whole selection.
   const bodyRef = useBodyDrag(elements, zoom, updateElements, interactive)
@@ -128,13 +122,23 @@ export default function SelectionBox({ elements, zoom, toWorld, updateElements, 
       }}
     >
       {interactive && (loneLine
-        ? <LineHandles element={loneLine} zoom={zoom} updateElements={updateElements} box={box} />
+        ? <LineHandles element={loneLine} zoom={zoom} updateElements={updateElements} box={box} hitTest={hitTest} onCandidate={setBindCandidate} />
         : <>
             {HANDLES.map((h) => (
               <BoxHandle key={h.pos} spec={h} elements={elements} zoom={zoom} rotation={rotation} updateElements={updateElements} />
             ))}
             <RotateHandle elements={elements} toWorld={toWorld} updateElements={updateElements} />
           </>)}
+      {interactive && bindCandidate && <span
+        className={styles.bindTarget}
+        style={{
+          "--bx": (bindCandidate.bounds.left - box.left) + "px",
+          "--by": (bindCandidate.bounds.top - box.top) + "px",
+          "--bw": (bindCandidate.bounds.right - bindCandidate.bounds.left) + "px",
+          "--bh": (bindCandidate.bounds.bottom - bindCandidate.bounds.top) + "px",
+          "--brot": (bindCandidate.bounds.rotation || 0) + "deg",
+        }}
+      />}
     </div>
   )
 }
@@ -317,25 +321,31 @@ function RotateHandle({ elements, toWorld, updateElements }) {
 
 // A lone line gets one handle per endpoint, dragging the endpoint directly so
 // the start→end direction (and therefore angle/arrowheads) is preserved.
-function LineHandles({ element, zoom, updateElements, box }) {
+// Endpoint drags are also how bindings are made and broken: hovering a
+// bindable element snaps to its nearest side and binds on release; dropping on
+// empty canvas detaches.
+function LineHandles({ element, zoom, updateElements, box, hitTest, onCandidate }) {
   const p = element.properties
   return (
     <>
       <LineHandle
         element={element} zoom={zoom} updateElements={updateElements} box={box}
+        hitTest={hitTest} onCandidate={onCandidate} bindKey="startBinding"
         keyX="startX" keyY="startY" x={p.startX} y={p.startY}
       />
       <LineHandle
         element={element} zoom={zoom} updateElements={updateElements} box={box}
+        hitTest={hitTest} onCandidate={onCandidate} bindKey="endBinding"
         keyX="endX" keyY="endY" x={p.endX} y={p.endY}
       />
     </>
   )
 }
 
-function LineHandle({ element, zoom, updateElements, box, keyX, keyY, x, y }) {
+function LineHandle({ element, zoom, updateElements, box, hitTest, onCandidate, bindKey, keyX, keyY, x, y }) {
   const ref = useRef(null)
   const origin = useRef(null)
+  const candidate = useRef(null)
 
   usePointer(ref, {
     active: true,
@@ -343,12 +353,30 @@ function LineHandle({ element, zoom, updateElements, box, keyX, keyY, x, y }) {
     onDown: () => { origin.current = { x: element.properties[keyX], y: element.properties[keyY] } },
     onMove: (p) => {
       if (!p.hasDragged) return
+      const wx = origin.current.x + (p.x - p.startX) / zoom
+      const wy = origin.current.y + (p.y - p.startY) / zoom
+
+      // A moving endpoint is live (detached); over a bind candidate it snaps
+      // to the anchor it would attach to. The binding itself commits on release.
+      const hit = hitTest ? hitTest(wx, wy) : null
+      candidate.current = hit
+      onCandidate?.(hit)
       updateElements([{
         uuid: element.uuid,
         properties: {
-          [keyX]: origin.current.x + (p.x - p.startX) / zoom,
-          [keyY]: origin.current.y + (p.y - p.startY) / zoom,
+          [keyX]: hit ? hit.anchor.x : wx,
+          [keyY]: hit ? hit.anchor.y : wy,
+          [bindKey]: null,
         }
+      }])
+    },
+    onUp: () => {
+      const hit = candidate.current
+      candidate.current = null
+      onCandidate?.(null)
+      if (hit) updateElements([{
+        uuid: element.uuid,
+        properties: { [bindKey]: { uuid: hit.uuid, side: hit.side } }
       }])
     },
   })

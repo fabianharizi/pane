@@ -1,5 +1,7 @@
 import styles from './Board.module.css'
-import useContent from '../../utils/hooks/useContent'
+import encodeContent from '../../utils/methods/encodeContent'
+import { resolveLineEndpoints } from '../../utils/methods/lineGeometry'
+import { bindTargetAt } from '../../utils/methods/hitTest'
 import SelectionBox from '../SelectionBox/SelectionBox'
 import Preview from '../Preview/Preview'
 
@@ -8,7 +10,12 @@ import Preview from '../Preview/Preview'
 // and scaled by the camera; its children are positioned in world coordinates.
 
 export default function Board({boardRef, content, camera, toWorld, preview, selectedElements, getElement, updateElements, selectionInteractive}){
-  const { encodeContent } = useContent([])
+  // The SelectionBox works on effective geometry: bound line endpoints resolve
+  // against the live content, so bounds/handles sit where the line renders.
+  const lookup = (uuid) => content.find(el => el.uuid === uuid)
+  const resolveElement = (el) => el.type === 'line'
+    ? { ...el, properties: { ...el.properties, ...resolveLineEndpoints(el.properties, lookup) } }
+    : el
 
   return (
     <div
@@ -24,10 +31,11 @@ export default function Board({boardRef, content, camera, toWorld, preview, sele
         {encodeContent(content)}
         {preview && <Preview {...preview} />}
         {selectedElements.length > 0 && <SelectionBox
-          elements={selectedElements.map(getElement).filter(Boolean)}
+          elements={selectedElements.map(getElement).filter(Boolean).map(resolveElement)}
           zoom={camera.zoom}
           toWorld={toWorld}
           updateElements={updateElements}
+          hitTest={(wx, wy) => bindTargetAt(content, { x: wx, y: wy }, camera.zoom)}
           interactive={selectionInteractive}
         />}
       </div>

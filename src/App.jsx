@@ -61,6 +61,7 @@ export default function App(){
   useLineTool(
     boardRef,
     activeTool === 'line',
+    content,
     toWorld,
     enablePreview,
     disablePreview,

@@ -31,6 +31,7 @@ Because each pane is isolated in its own iframe, generated code can be fully int
 - **DOM-based elements** — every canvas object is a real DOM node in a transformed "world" div; the browser does all the coordinate mapping
 - **Selection** — click- and marquee-select any number of elements; one group selection box with move, proportional resize (Shift locks aspect), and rotation (Shift snaps to 15°)
 - **Properties panel** — live editing of the selected element's geometry and style
+- **Connector lines** — line endpoints attach to an element's edge and stay glued through move, resize, and rotate; straight, curved, or elbow routing with arrowheads; copy/paste keeps connections within the copied set, and deleting a target leaves the line frozen in place
 - **Command registry** — every app verb (`delete`, `copy`, `cut`, `paste`, `duplicate`, zoom ×3) declared once as `{ id, label, shortcut, enabled, run }` and bound everywhere: keyboard shortcuts, the zoom bar, and future menus/palette dispatch the same commands
 - **Placeholder element types** — rectangle, oval, line, text, drawn with toolbar tools; these exercise the canvas machinery and will be joined (and largely replaced) by panes
 

@@ -1,19 +1,17 @@
+/* The svg is a positioning frame at the route's bounding box. Content may
+   overflow it (curve bellies, elbow stubs, arrowheads) and still renders and
+   hit-tests, so the frame needs no padding. The root ignores pointer events —
+   only the invisible fat hit path (pointer-events: stroke) is clickable. */
 .line{
-  box-sizing: border-box;
   position: absolute;
-  top: var(--y) ;
+  top: var(--y);
   left: var(--x);
-  width: var(--length);
-  height: calc(var(--strokeWidth) + 10px);
-  transform-origin: 0 50%;
-  rotate: var(--angle);
+  width: var(--width);
+  height: var(--height);
+  overflow: visible;
+  pointer-events: none;
 }
 
-.line::before {
-  content: '';
-  position: absolute;
-  top: calc(50% - var(--strokeWidth) / 2);
-  left: 0;
-  right: 0;
-  border-top: var(--strokeWidth) var(--strokeStyle) var(--strokeColor);
+.hit{
+  pointer-events: stroke;
 }

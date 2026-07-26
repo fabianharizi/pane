@@ -13,7 +13,7 @@ const GHOST = { strokeColor: "#0088aaaa", strokeWidth: 2, strokeStyle: "dashed" 
 const MODES = {
   rectangle: { Component: Shape, props: { type: "rectangle" }, style: { ...GHOST, fill: "transparent" } },
   oval:      { Component: Shape, props: { type: "oval" },      style: { ...GHOST, fill: "transparent" } },
-  line:      { Component: Line,  props: {},                    style: { ...GHOST, headStart: "none", headEnd: "none" } },
+  line:      { Component: Line,  props: {},                    style: { ...GHOST, headStart: "none", headEnd: "arrow", routing: "straight" } },
   select:    { Component: Shape, props: { type: "rectangle" }, style: { ...GHOST, fill: "#0088aa20" } },  // marquee
 };
 

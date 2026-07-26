@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import UUID from "../methods/UUID";
+import { resolveLineEndpoints } from "../methods/lineGeometry";
 
 // The command registry: every app function (verb) declared once as data, so
 // each surface — shortcuts, buttons, future menus / context menu / palette —
@@ -20,24 +21,58 @@ export default function useCommands({ selectedElements, getElement, addElements,
 
   const hasSelection = () => selectedElements.length > 0;
 
-  // Type + properties snapshots of the current selection (uuids are minted on spawn).
-  const snapshotSelection = () => selectedElements
-    .map(getElement)
-    .filter(Boolean)
-    .map(el => ({ type: el.type, properties: { ...el.properties } }));
+  // Type + properties snapshots of the current selection. `source` keeps the
+  // copied element's uuid so bindings can be remapped at spawn (fresh uuids are
+  // minted then). Line snapshots bake their RESOLVED endpoints and keep a
+  // binding only when its target is also in the selection — a line copied
+  // without its target pastes detached at its current position, never silently
+  // bound to the original.
+  const snapshotSelection = () => {
+    const selected = new Set(selectedElements);
+    return selectedElements
+      .map(getElement)
+      .filter(Boolean)
+      .map(el => {
+        if (el.type !== "line") return { type: el.type, source: el.uuid, properties: { ...el.properties } };
+
+        const r = resolveLineEndpoints(el.properties, getElement);
+        const keep = (binding) => (binding && selected.has(binding.uuid)) ? binding : null;
+        return {
+          type: "line",
+          source: el.uuid,
+          properties: {
+            ...el.properties,
+            startX: r.startX, startY: r.startY,
+            endX: r.endX, endY: r.endY,
+            startBinding: keep(el.properties.startBinding),
+            endBinding: keep(el.properties.endBinding),
+          }
+        };
+      });
+  };
 
   // Materialize snapshots as new elements, offset so they don't cover their
-  // sources; addElements selects exactly the spawned set.
+  // sources; addElements selects exactly the spawned set. Uuids are minted for
+  // the whole batch first so kept bindings remap onto the spawned copies.
   const spawnItems = (items) => {
+    const minted = new Map(items.map(item => [item.source, UUID.generate(item.type.slice(0, 4))]));
+    const remap = (binding) => (binding && minted.has(binding.uuid))
+      ? { ...binding, uuid: minted.get(binding.uuid) }
+      : null;
+
     addElements(items.map(item => ({
       type: item.type,
-      uuid: UUID.generate(item.type.slice(0, 4)),
+      uuid: minted.get(item.source),
       properties: {
         ...item.properties,
         startX: item.properties.startX + 20,
         startY: item.properties.startY + 20,
         endX: item.properties.endX + 20,
         endY: item.properties.endY + 20,
+        ...(item.type === "line" ? {
+          startBinding: remap(item.properties.startBinding),
+          endBinding: remap(item.properties.endBinding),
+        } : {}),
       }
     })));
   };

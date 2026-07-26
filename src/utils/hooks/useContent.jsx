@@ -1,7 +1,5 @@
 import { useState } from "react";
-import Shape from '../../components/Shape/Shape';
-import Line from '../../components/Line/Line';
-import Text from "../../components/Text/Text";
+import { resolveLineEndpoints } from "../methods/lineGeometry";
 
 // This hook is used to keep track of the contents of the canvas.
 // Selection is uniformly MULTI: `selectedElements` is an array of uuids and
@@ -54,50 +52,42 @@ export default function useContent(start){
     }))
   }
 
+  // Deleting a line's binding target BAKES the line first: its resolved
+  // endpoint coords (computed against the pre-delete content) are written into
+  // the raw coords and the binding is nulled, so the line freezes in place
+  // instead of dangling or snapping to its stale fallback position.
   const deleteElements = (uuids) => {
-    setContent(prev => prev.filter(el => !uuids.includes(el.uuid)));
+    setContent(prev => {
+      const doomed = new Set(uuids)
+      const lookup = (uuid) => prev.find(el => el.uuid === uuid)
+
+      return prev
+        .filter(el => !doomed.has(el.uuid))
+        .map(el => {
+          if (el.type !== "line") return el
+          const startDead = el.properties.startBinding && doomed.has(el.properties.startBinding.uuid)
+          const endDead = el.properties.endBinding && doomed.has(el.properties.endBinding.uuid)
+          if (!startDead && !endDead) return el
+
+          const r = resolveLineEndpoints(el.properties, lookup)
+          return {
+            ...el,
+            properties: {
+              ...el.properties,
+              startX: r.startX, startY: r.startY,
+              endX: r.endX, endY: r.endY,
+              ...(startDead ? { startBinding: null } : {}),
+              ...(endDead ? { endBinding: null } : {}),
+            }
+          }
+        })
+    });
     setSelectedElements(prev => prev.filter(id => !uuids.includes(id)));
   }
 
   const clearContent = () => {
     setContent([])
     setSelectedElements([])
-  }
-
-  const encodeContent = (content) => {
-    return content.map(el => {
-      // Stored coords ARE world coords — the camera transform on the world div
-      // handles all screen mapping, so properties pass through untouched.
-      const properties = el.properties
-
-      switch(el.type){
-        case "rectangle":
-        case "oval":
-          return <Shape
-            key={el.uuid}
-            uuid={el.uuid}
-            selected={el.selected}
-            type={el.type}
-            properties={properties}
-          />
-
-        case "line":
-          return <Line
-            key={el.uuid}
-            uuid={el.uuid}
-            selected={el.selected}
-            properties={properties}
-          />
-
-        case "text":
-          return <Text
-            key={el.uuid}
-            uuid={el.uuid}
-            selected={el.selected}
-            properties={properties}
-          />
-      }
-    })
   }
 
   return {
@@ -109,7 +99,6 @@ export default function useContent(start){
     "selectElements": selectElements,
     "updateElements": updateElements,
     "deleteElements": deleteElements,
-    "clearContent": clearContent,
-    "encodeContent": encodeContent
+    "clearContent": clearContent
   };
 }

@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import usePointer from '../hooks/usePointer';
+import { resolveLineEndpoints } from '../methods/lineGeometry';
 
 // This hook is used to implement the "Select" tool.
 // Click selects one element (empty canvas deselects); dragging draws a marquee
@@ -37,10 +38,14 @@ export default function useSelectTool(ref, active, content, selectElements, toWo
 
       // Select every element whose bounding box overlaps the marquee (partial
       // or full); an empty result deselects all. The SelectionBox renders the
-      // group box from the selection itself.
+      // group box from the selection itself. Bound line endpoints resolve to
+      // their targets' anchors — the marquee must test where the line renders.
+      const lookup = (uuid) => content.find(el => el.uuid === uuid)
       selectElements(content
         .filter(el => {
-          const { startX, startY, endX, endY } = el.properties;
+          const { startX, startY, endX, endY } = el.type === "line"
+            ? resolveLineEndpoints(el.properties, lookup)
+            : el.properties;
           const left = Math.min(startX, endX);
           const top = Math.min(startY, endY);
           const right = Math.max(startX, endX);

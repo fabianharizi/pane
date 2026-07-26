@@ -1,19 +1,21 @@
 import { useState } from "react"
 import styles from "./Properties.module.css"
+import { resolveLineEndpoints } from "../../utils/methods/lineGeometry"
 
 // Which properties each element type exposes, in display order.
 // Only properties the components actually render are listed:
 //  - `borderRadius` is ignored by ovals (.oval hardcodes border-radius: 100%)
-//  - `headStart`/`headEnd` are stored on lines but never drawn, so they're omitted
 //
 // Geometry note: elements store two corners (startX, startY, endX, endY) in
-// CENTER-RELATIVE coords — (0,0) is the canvas center. Shapes and text expose a
-// derived position/size box; lines expose their raw endpoints, because a line's
-// direction is meaningful (Line.jsx derives its angle from start→end).
+// WORLD coords. Shapes and text expose a derived position/size box; lines
+// expose their endpoints directly, because a line's direction is meaningful.
+// A bound line endpoint displays its RESOLVED (glued) position; typing into
+// either of its fields bakes both coords and detaches that end — predictable,
+// instead of numbers that fight the resolver.
 const SCHEMA = {
   rectangle: ["position", "size", "rotation", "fill", "strokeColor", "strokeWidth", "strokeStyle", "borderRadius", "opacity"],
   oval:      ["position", "size", "rotation", "fill", "strokeColor", "strokeWidth", "strokeStyle", "opacity"],
-  line:      ["start", "end", "strokeColor", "strokeWidth", "strokeStyle"],
+  line:      ["start", "end", "routing", "strokeColor", "strokeWidth", "strokeStyle", "headStart", "headEnd"],
   text:      ["position", "size", "rotation", "content"],
 }
 
@@ -27,6 +29,9 @@ const DEFAULTS = {
   opacity: 1,
   rotation: 0,
   content: "",
+  routing: "straight",
+  headStart: "none",
+  headEnd: "arrow",
 }
 
 const num = (v) => (typeof v === "number" && Number.isFinite(v) ? v : 0)
@@ -67,12 +72,14 @@ const FIELDS = {
     ],
   },
 
+  // Editing a bound endpoint detaches it: both coords bake (the untyped axis
+  // would otherwise fall back to a stale raw value) and the binding clears.
   start: {
     label: "Start",
     type: "pair",
     parts: [
-      { key: "startX", prefix: "X", get: (p) => Math.round(num(p.startX)), set: (p, v) => ({ startX: v }) },
-      { key: "startY", prefix: "Y", get: (p) => Math.round(num(p.startY)), set: (p, v) => ({ startY: v }) },
+      { key: "startX", prefix: "X", get: (p) => Math.round(num(p.startX)), set: (p, v) => ({ startX: v, startY: num(p.startY), startBinding: null }) },
+      { key: "startY", prefix: "Y", get: (p) => Math.round(num(p.startY)), set: (p, v) => ({ startX: num(p.startX), startY: v, startBinding: null }) },
     ],
   },
 
@@ -80,8 +87,8 @@ const FIELDS = {
     label: "End",
     type: "pair",
     parts: [
-      { key: "endX", prefix: "X", get: (p) => Math.round(num(p.endX)), set: (p, v) => ({ endX: v }) },
-      { key: "endY", prefix: "Y", get: (p) => Math.round(num(p.endY)), set: (p, v) => ({ endY: v }) },
+      { key: "endX", prefix: "X", get: (p) => Math.round(num(p.endX)), set: (p, v) => ({ endX: v, endY: num(p.endY), endBinding: null }) },
+      { key: "endY", prefix: "Y", get: (p) => Math.round(num(p.endY)), set: (p, v) => ({ endX: num(p.endX), endY: v, endBinding: null }) },
     ],
   },
 
@@ -89,6 +96,9 @@ const FIELDS = {
   strokeColor:  { label: "Stroke",        type: "color", nullable: true },
   strokeWidth:  { label: "Stroke width",  type: "number", min: 0, max: 50,  step: 1 },
   strokeStyle:  { label: "Stroke style",  type: "select", options: ["solid", "dashed", "dotted"] },
+  routing:      { label: "Routing",       type: "select", options: ["straight", "curved", "elbow"] },
+  headStart:    { label: "Start head",    type: "select", options: ["none", "arrow"] },
+  headEnd:      { label: "End head",      type: "select", options: ["none", "arrow"] },
   rotation:     { label: "Rotation",      type: "number", step: 1 },
   borderRadius: { label: "Corner radius", type: "number", min: 0, max: 500, step: 1 },
   opacity:      { label: "Opacity",       type: "range",  min: 0, max: 1,   step: 0.05 },
@@ -263,7 +273,12 @@ function Field({ name, properties, onPatch }) {
 export default function Properties({ selectedElements, getElement, updateElements }) {
   // The panel edits exactly one element. Multi-editing needs mixed-value
   // handling (a later feature), so it stays closed for 0 or 2+ selected.
-  const element = selectedElements.length === 1 ? getElement(selectedElements[0]) : undefined
+  const raw = selectedElements.length === 1 ? getElement(selectedElements[0]) : undefined
+
+  // Bound line endpoints display where they actually render.
+  const element = raw?.type === "line"
+    ? { ...raw, properties: { ...raw.properties, ...resolveLineEndpoints(raw.properties, getElement) } }
+    : raw
 
   if (!element) return null
 
