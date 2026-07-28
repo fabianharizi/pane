@@ -77,6 +77,11 @@ export default function useCommands({ selectedElements, getElement, addElements,
     })));
   };
 
+  // Declared so every surface can render them before they work; `run` lands
+  // later. Disabled on purpose — a menu item that looks live but does nothing
+  // is worse than a grey one. Filling one in = replace `enabled` and `run`.
+  const pending = (id, label, shortcut) => ({ id, label, shortcut, enabled: () => false, run: () => {} });
+
   const commands = [
     // History first — this is also the order a future menu renders in.
     // useContent coalesces writes, so one drag or typing burst is one step.
@@ -150,6 +155,25 @@ export default function useCommands({ selectedElements, getElement, addElements,
       shortcut: "ctrl+0",
       run: () => zoomTo(1),
     },
+
+    // --- Not implemented yet -------------------------------------------------
+    // The context menu renders these greyed. Note useShortcuts preventDefaults a
+    // matched combo even when disabled, so these keys are already the app's.
+    //
+    // select-all is a one-liner when wanted: selectElements(content.map(el => el.uuid))
+    // — it just needs `content` + `selectElements` added to this hook's deps.
+    pending("select-all", "Select all", "ctrl+a"),
+    // paste-here wants the world point under the cursor; spawnItems would need a
+    // position parameter instead of its hardcoded +20 offset.
+    pending("paste-here", "Paste here"),
+    // Content array order IS z-order (see hitTest.js), but useContent exposes no
+    // reorder mutator yet — these need one that goes through `mutate` to be undoable.
+    pending("bring-front", "Bring to front", "ctrl+shift+]"),
+    pending("bring-forward", "Bring forward", "ctrl+]"),
+    pending("send-backward", "Send backward", "ctrl+["),
+    pending("send-back", "Send to back", "ctrl+shift+["),
+    pending("group", "Group", "ctrl+g"),
+    pending("ungroup", "Ungroup", "ctrl+shift+g"),
   ];
 
   // For buttons/menus: run a command by id, honoring its enabled predicate.

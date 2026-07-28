@@ -165,6 +165,11 @@ export default function SelectionBox({ elements, zoom, toWorld, updateElements, 
         lonePane && styles.glow,
       ].filter(Boolean).join(" ")}
       ref={bodyRef}
+      // The box covers whatever is selected and carries no `data-uuid`, so a
+      // right-click on it would otherwise read as empty canvas and wipe the
+      // very selection the user meant to act on. This marks it as "the
+      // selection" for useContextMenu.
+      data-selection-box=""
       style={{
         "--x": box.left + "px",
         "--y": box.top + "px",

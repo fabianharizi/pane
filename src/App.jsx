@@ -4,6 +4,7 @@ import Board from './components/Board/Board';
 import Toolbar from './components/Toolbar/Toolbar';
 import Properties from './components/Properties/Properties';
 import ZoomBar from './components/ZoomBar/ZoomBar';
+import ContextMenu from './components/ContextMenu/ContextMenu';
 import useContent from './utils/hooks/useContent';
 import useCamera from './utils/hooks/useCamera';
 import usePreview from './utils/hooks/usePreview';
@@ -14,6 +15,7 @@ import useLineTool from './utils/tools/useLineTool';
 import useTextTool from './utils/tools/useTextTool';
 import useShortcuts from './utils/hooks/useShortcuts';
 import useCommands from './utils/hooks/useCommands';
+import useContextMenu from './utils/hooks/useContextMenu';
 import { bindTargetAt } from './utils/methods/hitTest';
 import usePaneTool from './utils/tools/usePaneTool';
 
@@ -50,6 +52,13 @@ export default function App(){
   // The command registry: every app verb declared once (delete/copy/cut/paste/
   // duplicate/zoom...), consumed by shortcuts, ZoomBar, and future menus.
   const {commands, runCommand} = useCommands({ selectedElements, getElement, addElements, deleteElements, camera, zoomTo, undo, redo, canUndo, canRedo });
+
+  // Right-click: decides which menu the click means (and selects under the
+  // cursor when needed). The menu itself renders the registry above.
+  const {contextMenu, closeContextMenu} = useContextMenu(boardRef, {
+    selectionActive: SELECTION_TOOLS.includes(activeTool),
+    selectedElements, selectElements, getElement, toWorld,
+  });
 
   useEffect(() => {
     if (selectedElements.length && !SELECTION_TOOLS.includes(activeTool)) selectElements([]);
@@ -149,6 +158,15 @@ export default function App(){
           <div className="zoombar">
             <ZoomBar zoom={camera.zoom} runCommand={runCommand} />
           </div>
+          {/* Last, so it paints above the other panels. The first surface handed
+              `commands` itself rather than just `runCommand` — a menu needs
+              each command's label, shortcut and enabled() to render it. */}
+          <ContextMenu
+            menu={contextMenu}
+            commands={commands}
+            runCommand={runCommand}
+            onClose={closeContextMenu}
+          />
         </div>
       </main>
     </>

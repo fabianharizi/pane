@@ -1,0 +1,105 @@
+/* Groups every panel for the outside-click containment test without becoming a
+   box itself — `.interface *` grants pointer-events to all descendants, and a
+   full-bleed wrapper would swallow the whole canvas. */
+.root{
+  display: contents;
+}
+
+/* Opaque on purpose, matching the Properties panel's dropdown: the app's other
+   chrome is translucent, but stacked transparency over canvas content is
+   unreadable. Fixed positioning keeps the panel in the same viewport space the
+   contextmenu event reports. */
+.panel{
+  position: fixed;
+  z-index: 100;                       /* Properties' iconSelect menu claims 20 */
+  margin: 0;
+  padding: 3px;
+  min-width: 190px;
+  list-style: none;
+
+  border-radius: 4px;
+  border: 1px solid #ffffff26;
+  background-color: #232326;
+  box-shadow: 0 6px 18px #00000073;
+
+  color: #e8e8e8;
+  font-size: 13px;
+
+  /* Native scrollbars inside the panel render dark; inherits to descendants. */
+  color-scheme: dark;
+  outline: none;
+}
+
+.item{
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 6px;
+
+  border: 0;
+  border-radius: 2px;
+  background: transparent;
+  color: #ffffffcc;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: 0.15s ease;
+}
+.item:hover:not(:disabled),
+.item:focus-visible:not(:disabled){
+  background-color: #ffffff1a;
+  color: #e8e8e8;
+  outline: none;
+}
+
+/* Unavailable, not absent: the row keeps its place so a menu's shape doesn't
+   shift as state changes. */
+.item:disabled{
+  color: #ffffff40;
+  cursor: default;
+}
+
+/* Destructive verbs earn the warning colour only on hover, matching the pane's
+   close button — a permanently red row shouts. */
+.danger:hover:not(:disabled),
+.danger:focus-visible:not(:disabled){
+  background-color: #ff5f56;
+  color: #fff;
+}
+
+.label{
+  flex: 1;
+  white-space: nowrap;
+}
+
+/* Right-aligned so the labels stay scannable down the left edge. */
+.hint{
+  flex: none;
+  color: #ffffff66;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.item:disabled .hint{
+  color: #ffffff2b;
+}
+
+.icon,
+.chevron{
+  flex: none;
+  color: #ffffff99;
+}
+.chevron{
+  margin-right: -2px;
+}
+.item:hover:not(:disabled) .icon,
+.item:hover:not(:disabled) .chevron{
+  color: #e8e8e8;
+}
+
+.divider{
+  height: 1px;
+  margin: 3px 0;
+  background-color: #ffffff1a;
+}
