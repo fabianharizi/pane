@@ -15,6 +15,7 @@ import useTextTool from './utils/tools/useTextTool';
 import useShortcuts from './utils/hooks/useShortcuts';
 import useCommands from './utils/hooks/useCommands';
 import { bindTargetAt } from './utils/methods/hitTest';
+import usePaneTool from './utils/tools/usePaneTool';
 
 const SELECTION_TOOLS = ['select', 'move'];
 
@@ -92,6 +93,15 @@ export default function App(){
   useTextTool(
     boardRef,
     activeTool === 'text',
+    toWorld,
+    enablePreview,
+    disablePreview,
+    addElements,
+    setActiveTool
+  )
+  usePaneTool(
+    boardRef,
+    activeTool === 'pane',
     toWorld,
     enablePreview,
     disablePreview,

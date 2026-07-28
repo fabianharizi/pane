@@ -1,4 +1,4 @@
-import { Circle, Hand, LetterText, MousePointer2, MoveUpRight, Slash, Square, Text, TypeIcon } from "lucide-react";
+import { AppWindowMac, Circle, Hand, LetterText, MousePointer2, MoveUpRight, Slash, Square, Text, TypeIcon } from "lucide-react";
 
 // shortcut: sticky key press that switches to the tool and stays.
 // momentary: key that activates the tool only while held, restoring the
@@ -14,6 +14,7 @@ const toolset = [
     { id: "oval", icon: Circle, shortcut: "o" },
     { id: "line", icon: MoveUpRight, shortcut: "l" },
     { id: "text", icon: TypeIcon, shortcut: "t" },
+    { id: "pane", icon: AppWindowMac, shortcut: "p" },
   ]
 ]
 

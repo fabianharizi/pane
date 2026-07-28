@@ -4,7 +4,7 @@ import { anchorPoint, rotatePoint } from "./lineGeometry"
 // sides) should a dragged endpoint attach to. Only box-like elements are
 // bindable — lines can't bind to lines or to themselves.
 
-const BINDABLE = new Set(["rectangle", "oval", "text"])
+const BINDABLE = new Set(["rectangle", "oval", "text", "pane"])
 
 // Padding around the target's box, in SCREEN px (divided by zoom at use), so a
 // drop just outside the border still binds.

@@ -30,6 +30,68 @@
   cursor: move;
 }
 
+/* A lone pane: it already renders a window frame, so ringing it with eight
+   handles reads as clutter. The edge pulses instead, and the only affordance
+   left is the corner grip.
+   Every glow distance is scaled by 1/zoom for the same reason the border is —
+   the box lives in the zoomed world div, and an unscaled shadow would bloom
+   into a smear when zoomed in and vanish when zoomed out. */
+.box.glow{
+  --glow: calc(1px / var(--cam-zoom));
+
+  border-color: #6c6cff;
+  border-radius: 8px;                 /* matches the pane's own frame radius */
+  animation: paneGlow 1.8s ease-in-out infinite;
+}
+
+@keyframes paneGlow{
+  0%, 100%{
+    box-shadow: 0 0 calc(var(--glow) * 4) #6c6cff73,
+                inset 0 0 calc(var(--glow) * 4) #6c6cff40;
+  }
+  50%{
+    box-shadow: 0 0 calc(var(--glow) * 12) calc(var(--glow) * 2) #6c6cffcc,
+                inset 0 0 calc(var(--glow) * 8) #6c6cff59;
+  }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .box.glow{
+    animation: none;
+    box-shadow: 0 0 calc(var(--glow) * 8) calc(var(--glow) * 1) #6c6cff99;
+  }
+}
+
+/* The pane's resize grip: a notch tucked into the bottom-right corner rather
+   than a dot centred on it, so it reads as part of the window frame.
+   Anchoring with right/bottom (instead of the --hx/--hy percentages the other
+   handles use) is what lets the counter-scale pin the corner: scaling about
+   100% 100% leaves the bottom-right pixel exactly where it was. */
+.box.glow .grip{
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  transform: scale(calc(1 / var(--cam-zoom)));
+  transform-origin: 100% 100%;
+
+  width: 16px;
+  height: 16px;
+  box-sizing: border-box;
+  border-radius: 5px 0 7px 0;
+  background-color: #6c6cffd9;
+
+  cursor: nwse-resize;
+  pointer-events: auto;
+}
+
+/* Diagonal grip lines, inset so they don't touch the notch's edges. */
+.box.glow .grip::after{
+  content: "";
+  position: absolute;
+  inset: 4px;
+  background-image: repeating-linear-gradient(-45deg, #ffffffe6 0 1px, transparent 1px 4px);
+}
+
 .handle{
   position: absolute;
   left: var(--hx);

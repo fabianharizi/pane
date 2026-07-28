@@ -1,0 +1,98 @@
+/* The window frame. `overflow: hidden` is what makes the radius real — it clips
+   the iframe's square corners, which no border-radius on the iframe itself can
+   do reliably across browsers. */
+.pane{
+  position: absolute;
+  top: var(--y);
+  left: var(--x);
+  width: var(--width);
+  height: var(--height);
+
+  /* Rotation is about the element's center (default transform-origin). */
+  rotate: var(--rotation, 0deg);
+
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  background-color: var(--fill);
+  border-radius: 8px;
+  opacity: var(--opacity);
+  box-shadow: 4px 4px 15px #15151580;
+
+  /* Chrome text; the widget inside the iframe inherits nothing from here. */
+  color: #e8e8e8;
+  font-size: 12px;
+}
+
+/* The SelectionBox already draws the selection outline, so this only warms the
+   chrome to the accent — enough to tell which window is active in a stack. */
+.pane[data-selected="true"]{
+  border-color: #6c6cff;
+}
+
+.titlebar{
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 26px;
+  padding: 0 4px 0 10px;
+  box-sizing: border-box;
+
+  background-color: #ffffff14;
+  backdrop-filter: blur(5px);
+  border-bottom: 1px solid #ffffff1a;
+
+  user-select: none;
+  cursor: default;
+}
+
+.pane[data-selected="true"] .titlebar{
+  background-color: #6c6cff26;
+  border-bottom-color: #6c6cff4d;
+}
+
+.title{
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: #ffffffcc;
+}
+
+.close{
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: #ffffff99;
+  cursor: pointer;
+  transition: 0.15s ease;
+}
+.close:hover{
+  background-color: #ff5f56;
+  color: #fff;
+}
+
+/* The widget itself. `display: block` kills the inline-element baseline gap
+   that would otherwise show a sliver of --fill under the iframe. */
+.widget{
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  display: block;
+  border: 0;
+  background-color: #fff;
+}

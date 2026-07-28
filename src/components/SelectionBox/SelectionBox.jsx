@@ -21,6 +21,11 @@ const HANDLES = [
   { pos: "w",  cursor: "ew-resize",   edges: ["left"] },
 ]
 
+// A pane is chrome already — it draws its own window frame — so it takes a
+// quieter selection treatment: a glowing edge instead of handles, and this one
+// corner grip for resizing. Same BoxHandle behaviour, different skin.
+const SE_HANDLE = HANDLES.find(h => h.pos === "se")
+
 // Position within the box, as a percentage, derived from the compass name.
 const handleOffset = (pos) => ({
   x: pos.includes("w") ? 0 : pos.includes("e") ? 100 : 50,
@@ -134,6 +139,10 @@ export default function SelectionBox({ elements, zoom, toWorld, updateElements, 
   // meaningless on a group), so they apply to a lone selected line only.
   const loneLine = elements.length === 1 && elements[0].type === "line" ? elements[0] : null
 
+  // Same reasoning for the pane's stripped-back chrome: it's a per-element look,
+  // so a pane inside a multi-selection falls back to the standard handles.
+  const lonePane = elements.length === 1 && elements[0].type === "pane" ? elements[0] : null
+
   // A lone box element rotates the whole chrome with it, so resize handles work
   // in the element's local frame. Groups keep an axis-aligned box (rotation 0).
   const rotation = !loneLine && elements.length === 1 ? (elements[0].properties.rotation ?? 0) : 0
@@ -151,6 +160,9 @@ export default function SelectionBox({ elements, zoom, toWorld, updateElements, 
         // A lone line's box is just its endpoints' bbox — meaningless as a
         // frame, so the outline is hidden and only the endpoint dots show.
         loneLine && styles.bare,
+        // A pane's frame IS the selection indicator, so it pulses instead of
+        // being ringed by handles.
+        lonePane && styles.glow,
       ].filter(Boolean).join(" ")}
       ref={bodyRef}
       style={{
@@ -163,6 +175,8 @@ export default function SelectionBox({ elements, zoom, toWorld, updateElements, 
     >
       {interactive && (loneLine
         ? <LineHandles element={loneLine} zoom={zoom} updateElements={updateElements} box={box} hitTest={hitTest} onCandidate={setBindCandidate} />
+        : lonePane
+        ? <BoxHandle spec={SE_HANDLE} className={styles.grip} elements={elements} zoom={zoom} rotation={rotation} coverRotated={coverRotated} updateElements={updateElements} />
         : <>
             {HANDLES.map((h) => (
               <BoxHandle key={h.pos} spec={h} elements={elements} zoom={zoom} rotation={rotation} coverRotated={coverRotated} updateElements={updateElements} />
@@ -218,8 +232,9 @@ function useBodyDrag(elements, zoom, updateElements, interactive, onActivate) {
 
 // A resize handle. Dragging it resizes the group box, and every element's raw
 // corners are mapped proportionally into the new box — one code path whether
-// the selection holds one element or many.
-function BoxHandle({ spec, elements, zoom, rotation, coverRotated, updateElements }) {
+// the selection holds one element or many. `className` swaps the skin only (the
+// pane's corner grip); the drag behaviour is identical either way.
+function BoxHandle({ spec, elements, zoom, rotation, coverRotated, updateElements, className }) {
   const ref = useRef(null)
   const origin = useRef(null)   // group box + member corners snapshotted at drag start
   const off = handleOffset(spec.pos)
@@ -291,7 +306,7 @@ function BoxHandle({ spec, elements, zoom, rotation, coverRotated, updateElement
 
   return (
     <span
-      className={styles.handle}
+      className={className ?? styles.handle}
       ref={ref}
       data-handle={spec.pos}
       style={{ "--hx": off.x + "%", "--hy": off.y + "%" }}
