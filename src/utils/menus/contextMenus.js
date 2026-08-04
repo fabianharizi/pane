@@ -19,8 +19,8 @@ const ORDER = {
 }
 
 // Every single-selection menu today. Peel a type off by giving its key its own
-// array — a pane will want "Reload widget", a line "Reverse direction", text
-// "Edit text". Nothing outside that one key has to change when one diverges.
+// array — a line will want "Reverse direction", text an "Edit text". Nothing
+// outside that one key has to change when one diverges.
 const SINGLE = [
   ["cut", "copy", "duplicate"],
   [ORDER],
@@ -43,7 +43,6 @@ export const CONTEXT_MENUS = {
     oval:      SINGLE,
     line:      SINGLE,
     text:      SINGLE,
-    pane:      SINGLE,
     default:   SINGLE,
   },
 

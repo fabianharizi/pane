@@ -1,6 +1,5 @@
 import styles from './Toolbar.module.css'
 import toolset from '../../utils/tools/toolset.js'
-import useShortcuts from '../../utils/hooks/useShortcuts.js'
 
 // Build a tooltip like "Rectangle (R)" from a tool's id and shortcut.
 function label(tool){

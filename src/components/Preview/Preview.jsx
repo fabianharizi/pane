@@ -16,7 +16,6 @@ const MODES = {
   oval:      { Component: Shape, props: { type: "oval" },      style: { ...GHOST, fill: "transparent" } },
   line:      { Component: Line,  props: {},                    style: { ...GHOST, headStart: "none", headEnd: "arrow", routing: "straight" } },
   select:    { Component: Shape, props: { type: "rectangle" }, style: { ...GHOST, fill: "#0088aa20" } },  // marquee
-  pane: { Component: Shape, props: { type: "rectangle" }, style: { ...GHOST, fill: "#ffffff20" } },
 };
 
 export default function Preview({ mode, startX, startY, endX, endY, anchors }) {

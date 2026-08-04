@@ -17,7 +17,6 @@ import useShortcuts from './utils/hooks/useShortcuts';
 import useCommands from './utils/hooks/useCommands';
 import useContextMenu from './utils/hooks/useContextMenu';
 import { bindTargetAt } from './utils/methods/hitTest';
-import usePaneTool from './utils/tools/usePaneTool';
 
 const SELECTION_TOOLS = ['select', 'move'];
 
@@ -25,7 +24,7 @@ export default function App(){
   const boardRef = useRef(null);
 
   const [activeTool, setActiveTool] = useState("select");
-  const {content, selectedElements, getElement, addElements, selectElements, updateElements, deleteElements, clearContent, undo, redo, canUndo, canRedo} = useContent([]);
+  const {content, selectedElements, getElement, addElements, selectElements, updateElements, deleteElements, undo, redo, canUndo, canRedo} = useContent([]);
   const {camera, panBy, zoomTo, toWorld} = useCamera(boardRef);
   const {preview, enablePreview, disablePreview} = usePreview();
 
@@ -102,15 +101,6 @@ export default function App(){
   useTextTool(
     boardRef,
     activeTool === 'text',
-    toWorld,
-    enablePreview,
-    disablePreview,
-    addElements,
-    setActiveTool
-  )
-  usePaneTool(
-    boardRef,
-    activeTool === 'pane',
     toWorld,
     enablePreview,
     disablePreview,

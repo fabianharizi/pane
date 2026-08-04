@@ -61,8 +61,8 @@
   cursor: default;
 }
 
-/* Destructive verbs earn the warning colour only on hover, matching the pane's
-   close button — a permanently red row shouts. */
+/* Destructive verbs earn the warning colour only on hover — a permanently red
+   row shouts. */
 .danger:hover:not(:disabled),
 .danger:focus-visible:not(:disabled){
   background-color: #ff5f56;

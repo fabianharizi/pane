@@ -1,71 +1,48 @@
-# Pane
+# Sketch
 
-A spatial canvas where AI generates **live, interactive widgets** — called *panes* — directly onto the canvas. Describe the widget you want ("a pomodoro timer", "a unit converter", "a kanban column") and it appears as a real, working piece of UI you can move, resize, and use in place.
+A whiteboard **engine** — the canvas machinery you'd otherwise spend months rebuilding, so you can put your effort into whatever makes your app different.
 
-Pane is **not** a whiteboard or a drawing tool. Nothing on the canvas is a picture of a thing — everything *is* the thing.
+Infinite pannable/zoomable canvas, multi-select with group transforms, connector lines that stay glued to the shapes they join, a properties panel, undo/redo that groups a drag into one step, and a command registry that keyboard shortcuts, buttons and menus all bind to. Written from scratch in React — no canvas library underneath.
+
+> **Status: pre-alpha, not yet packaged.** This runs today as an app you can clone and drive. The extension API and npm distribution are the next milestones — see [Roadmap](#roadmap). Nothing here is API-stable.
 
 ---
 
 ## The core idea
 
-Traditional canvas apps render to SVG or `<canvas>`: great for drawing, but everything on the surface is dead ink. Pane's canvas is built from **native DOM elements**. Every object is a real web component with its own markup, styles, and script — buttons click, inputs type, timers tick — while still living on an infinite, pannable, zoomable surface.
+Most canvas apps render to `<canvas>` or SVG: excellent for drawing, but everything on the surface is a picture. Sketch's canvas is built from **native DOM elements** in a transformed "world" div — every object is a real node with its own markup and styles, and the browser does all the coordinate mapping and hit-testing for you.
 
-That one decision is the technical differentiator: the canvas isn't a rendering target, it's a **layout of live documents**.
+That has a practical payoff: any element type you can render as a DOM node — a rich text block, a chart, a form, a video — is a canvas element, with no bespoke rendering or hit-testing code.
 
-## How it works
+## What's built
 
-1. You describe a widget in plain language.
-2. The app sends the request to Claude (**Anthropic API**).
-3. Claude returns a **self-contained HTML/CSS/JS document** as plain text.
-4. The app injects it into a **sandboxed iframe** and places it on the canvas as a new pane — positioned, sized, and persisted like any other canvas node.
-
-Because each pane is isolated in its own iframe, generated code can be fully interactive without touching the host app.
-
----
-
-## Status
-
-**Built and working today** — the canvas foundation:
-
-- **Infinite canvas with a camera** — pan anywhere, zoom 10%–800% anchored at the cursor; wheel pans, Shift+wheel pans horizontally, Ctrl/⌘+wheel (or trackpad pinch) zooms; grid and origin crosshair stay crisp at any zoom
-- **DOM-based elements** — every canvas object is a real DOM node in a transformed "world" div; the browser does all the coordinate mapping
-- **Selection** — click- and marquee-select any number of elements; one group selection box with move, proportional resize (Shift locks aspect), and rotation (Shift snaps to 15°)
-- **Undo / redo** — `Ctrl+Z` / `Ctrl+Shift+Z`, where one drag or one burst of typing is a single step (writes coalesce, so undo never rewinds a mouse-move frame at a time)
-- **Editable text** — double-click a text element to edit it in place
-- **Properties panel** — live editing of the selected element's geometry and style
-- **Connector lines** — line endpoints attach to an element's edge and stay glued through move, resize, and rotate; straight, curved, or elbow routing with arrowheads; copy/paste keeps connections within the copied set, and deleting a target leaves the line frozen in place
-- **Command registry** — every app verb (`delete`, `copy`, `cut`, `paste`, `duplicate`, zoom ×3) declared once as `{ id, label, shortcut, enabled, run }` and bound everywhere: keyboard shortcuts, the zoom bar, and future menus/palette dispatch the same commands
-- **Placeholder element types** — rectangle, oval, line, text, drawn with toolbar tools; these exercise the canvas machinery and will be joined (and largely replaced) by panes
-
-**Designed, not yet built:**
-
-- The pane generation pipeline (prompt → Claude → sandboxed iframe on the canvas)
+- **Camera viewport** — pan anywhere, zoom 10%–800% anchored at the cursor. Wheel pans, Shift+wheel pans horizontally, Ctrl/⌘+wheel (or trackpad pinch) zooms. The grid and origin crosshair stay 1px-crisp at any zoom.
+- **Selection** — click or marquee, any number of elements. One selection box for any count, with move, proportional resize (Shift locks aspect) and rotation (Shift snaps to 15°).
+- **Connector lines** — an endpoint binds to a shape's edge and stays glued through move, resize and rotate. Straight, curved or elbow routing with arrowheads. Bindings resolve at read time, so moving a shape re-routes its lines with no write cascade.
+- **Undo / redo** — whole-snapshot history where writes coalesce by *which elements × which properties*, so one drag or one burst of typing is a single `Ctrl+Z`.
+- **Command registry** — every verb declared once as `{ id, label, shortcut, enabled, run }`. Shortcuts, the zoom bar and the context menu all bind to the same declaration; no surface contains behavior.
+- **Context menu** — right-click, with different menus for empty canvas, a single element (keyed by element type) and a multi-selection. Nested submenus, viewport-edge flipping, keyboard navigation.
+- **Properties panel** — schema-driven live editing of the selected element's geometry and style, including a font picker and connector routing controls.
+- **Element types** — rectangle, oval, line, text.
+- **Editable text** — double-click to edit in place.
 
 ## Keyboard shortcuts
 
 **Tools** — `V` select · `H` move · `R` rectangle · `O` oval · `L` line · `T` text · hold `Space` to pan momentarily, releasing returns to the previous tool
 
-**Commands** — `Delete`/`Backspace` delete · `Ctrl+C` copy · `Ctrl+X` cut · `Ctrl+V` paste · `Ctrl+D` duplicate · `Ctrl+=` / `Ctrl+-` / `Ctrl+0` zoom in / out / reset to 100%
+**Commands** — `Delete`/`Backspace` delete · `Ctrl+C` copy · `Ctrl+X` cut · `Ctrl+V` paste · `Ctrl+D` duplicate · `Ctrl+Z` / `Ctrl+Shift+Z` undo / redo · `Ctrl+=` / `Ctrl+-` / `Ctrl+0` zoom in / out / reset
 
 ---
 
 ## Architecture
 
-React 19 + Vite, no state library, no router, CSS Modules. The guiding philosophy: **UI components are thin; all real behavior lives in custom hooks.**
+React 19 + Vite. No state library, no router, CSS Modules. The guiding rule: **UI components are thin; all real behavior lives in custom hooks.**
 
-- **Camera viewport** — `useCamera` owns `{ x, y, zoom }`; the Board is a clipping viewport div containing a world div with `transform: translate(pan) scale(zoom)`. Elements are stored in world coordinates and render untouched. `toWorld(screenX, screenY)` is the single conversion; drag deltas divide by zoom.
-- **`usePointer`** — the event bridge: Pointer Events with capture, drag slop, gesture ownership; callbacks only ever fire for gestures that started on their own element.
-- **`useContent`** — committed elements + selection; all operations are **plural-only** (arrays) — a single element is a one-element array.
-- **`useCommands`** — the command registry described above; surfaces never contain behavior.
-
-## Tech stack
-
-- React 19 + Vite
-- CSS Modules
-- lucide-react (icons)
-- Anthropic API (Claude) — pane generation (planned)
-
----
+- **`useCamera`** — owns `{ x, y, zoom }`. The Board is a clipping viewport div containing a world div with `transform: translate(pan) scale(zoom)`. Elements are stored in world coordinates and render untouched. `toWorld(screenX, screenY)` is the single conversion; drag deltas divide by zoom.
+- **`usePointer`** — the event bridge: Pointer Events with capture, drag slop, and gesture ownership, so callbacks only fire for gestures that began on their own element.
+- **`useContent`** — elements plus selection, behind one internal writer with a live ref mirror so several writes in a tick each see the previous one's result. All operations are **plural-only** — a single element is a one-element array. Selection is a uuid list and the only source of truth; elements carry no `selected` flag, which is why a history snapshot can just be content.
+- **`useCommands`** — the command registry above.
+- **Tools** are hooks composing `usePointer`, all mounted unconditionally and gated by an `active` boolean.
 
 ## Running locally
 
@@ -81,8 +58,24 @@ npm run lint     # eslint
 
 ## Roadmap
 
-- [x] Canvas foundation: camera viewport, DOM elements, multi-select, resize/rotate, properties panel, command registry
-- [ ] Pane node type: sandboxed iframe rendering of stored HTML/CSS/JS content
-- [ ] Generation flow: prompt input → Claude → new pane on the canvas
-- [ ] Pane lifecycle: regenerate, edit prompt, pin/resize behaviors
-- [ ] Canvas persistence (save / load)
+Toward an engine other people can build on:
+
+- [x] Canvas foundation — camera, DOM elements, multi-select, resize/rotate, properties panel
+- [x] Connector lines with edge binding
+- [x] Command registry, shortcuts, context menu
+- [ ] **Element-type registry** — one module per type declaring its component, tool, property schema, selection chrome and bindability, so adding a type is adding a file instead of editing six in lockstep
+- [ ] **Embeddability** — drop the global `*`/`body` CSS, container-relative layout instead of `100vw/100vh`, listeners scoped to the board
+- [ ] **`<Whiteboard>` API** — `content`/`onChange`, custom element types, theming
+- [ ] **Packaging** — Vite library mode, exports map, React as a peer dependency, a license
+- [ ] Z-order operations and grouping
+- [ ] Persistence and a serialization format
+- [ ] TypeScript, once the API has settled
+
+## Known limitations
+
+- The marquee ignores rotation — it tests unrotated bounding boxes, so a rotated element's visual overhang doesn't register hits. Click-selection is exact.
+- Line chrome and marquee hit-testing are routing-unaware: a curve's belly or an elbow's stubs fall outside the selection box.
+- Elbow routes have no obstacle avoidance.
+- Group resize scales a text element's box, not its font size.
+- No persistence — reloading clears the canvas.
+- No tests.

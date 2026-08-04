@@ -40,6 +40,7 @@
      own text out from the top, so `vertical` doesn't apply mid-edit — the text
      jumps back into alignment when the session closes. */
   align-content: stretch;
+  user-select: text;
 }
 
 /* The in-place editor has to be visually identical to the static text: no
@@ -61,4 +62,5 @@
   resize: none;
   overflow: hidden;
   cursor: text;
+  user-select: text;
 }
