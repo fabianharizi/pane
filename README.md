@@ -1,6 +1,6 @@
-# Sketch
+# react-whiteboard-kit
 
-A whiteboard **engine** — the canvas machinery you'd otherwise spend months rebuilding, so you can put your effort into whatever makes your app different.
+A whiteboard **engine** for React — the canvas machinery you'd otherwise spend months rebuilding, so you can put your effort into whatever makes your app different.
 
 Infinite pannable/zoomable canvas, multi-select with group transforms, connector lines that stay glued to the shapes they join, a properties panel, undo/redo that groups a drag into one step, and a command registry that keyboard shortcuts, buttons and menus all bind to. Written from scratch in React — no canvas library underneath.
 
@@ -10,7 +10,7 @@ Infinite pannable/zoomable canvas, multi-select with group transforms, connector
 
 ## The core idea
 
-Most canvas apps render to `<canvas>` or SVG: excellent for drawing, but everything on the surface is a picture. Sketch's canvas is built from **native DOM elements** in a transformed "world" div — every object is a real node with its own markup and styles, and the browser does all the coordinate mapping and hit-testing for you.
+Most canvas apps render to `<canvas>` or SVG: excellent for drawing, but everything on the surface is a picture. This canvas is built from **native DOM elements** in a transformed "world" div — every object is a real node with its own markup and styles, and the browser does all the coordinate mapping and hit-testing for you.
 
 That has a practical payoff: any element type you can render as a DOM node — a rich text block, a chart, a form, a video — is a canvas element, with no bespoke rendering or hit-testing code.
 
