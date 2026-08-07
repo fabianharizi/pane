@@ -1,4 +1,6 @@
-import { anchorPoint, rotatePoint } from "./lineGeometry"
+import { anchorPoint } from "./lineGeometry"
+import { rotatePoint } from "../geometry/primitives"
+import { geometryOf } from "../geometry"
 
 // Bind-target hit-testing for line endpoints: which element (and which of its
 // sides) should a dragged endpoint attach to. Only box-like elements are
@@ -22,12 +24,10 @@ export function bindTargetAt(content, worldPt, zoom = 1) {
     const el = content[i]
     if (!BINDABLE.has(el.type)) continue
 
-    const { startX, startY, endX, endY, rotation = 0 } = el.properties
-    const left = Math.min(startX, endX)
-    const right = Math.max(startX, endX)
-    const top = Math.min(startY, endY)
-    const bottom = Math.max(startY, endY)
-    const center = { x: (left + right) / 2, y: (top + bottom) / 2 }
+    const geometry = geometryOf(el)
+    const { left, right, top, bottom } = geometry.bounds(el.properties)
+    const rotation = geometry.rotationOf(el.properties)
+    const center = geometry.center(el.properties)
 
     // Test in the element's local frame: un-rotate the point instead of
     // rotating the box.

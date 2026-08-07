@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import usePointer from '../hooks/usePointer';
 import { resolveLineEndpoints } from '../methods/lineGeometry';
+import { geometryOf } from '../geometry';
 
 // This hook is used to implement the "Select" tool.
 // Click selects one element (empty canvas deselects); dragging draws a marquee
@@ -43,13 +44,13 @@ export default function useSelectTool(ref, active, content, selectElements, toWo
       const lookup = (uuid) => content.find(el => el.uuid === uuid)
       selectElements(content
         .filter(el => {
-          const { startX, startY, endX, endY } = el.type === "line"
-            ? resolveLineEndpoints(el.properties, lookup)
+          const properties = el.type === "line"
+            ? { ...el.properties, ...resolveLineEndpoints(el.properties, lookup) }
             : el.properties;
-          const left = Math.min(startX, endX);
-          const top = Math.min(startY, endY);
-          const right = Math.max(startX, endX);
-          const bottom = Math.max(startY, endY);
+          // NOTE: `bounds` ignores rotation, so a rotated element is still
+          // marquee-tested by its unrotated box — a known issue, preserved here
+          // deliberately. Switching to `cornersOf` is the one-line fix.
+          const { left, top, right, bottom } = geometryOf(el).bounds(properties);
 
           // AABB overlap: the two boxes intersect on both axes.
           return left < marquee.right

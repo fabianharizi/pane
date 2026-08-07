@@ -1,120 +1,10 @@
 import styles from "./SelectionBox.module.css"
 import usePointer from './../../utils/hooks/usePointer';
 import { useRef, useState } from "react";
-import { rad, deg, rotatePoint } from "../../utils/methods/lineGeometry";
+import { rad, deg } from "../../utils/geometry/primitives";
+import { HANDLES, MIN_SIZE, handleOffset, snap15, resizeBox } from "../../utils/geometry/resize";
+import { boundsOf, geometryOf } from "../../utils/geometry";
 import BindPoint from "../BindPoint/BindPoint";
-
-// Smallest the selection box may be resized to, in SCREEN px (divided by zoom
-// at use, so the minimum feels constant at any zoom). Prevents collapse/flip.
-const MIN_SIZE = 10
-
-// Resize handles. Each declares which edges of the bounding box it moves;
-// corners move two edges (and support Shift aspect-lock), edges move one.
-const HANDLES = [
-  { pos: "nw", cursor: "nwse-resize", edges: ["left", "top"] },
-  { pos: "n",  cursor: "ns-resize",   edges: ["top"] },
-  { pos: "ne", cursor: "nesw-resize", edges: ["right", "top"] },
-  { pos: "e",  cursor: "ew-resize",   edges: ["right"] },
-  { pos: "se", cursor: "nwse-resize", edges: ["right", "bottom"] },
-  { pos: "s",  cursor: "ns-resize",   edges: ["bottom"] },
-  { pos: "sw", cursor: "nesw-resize", edges: ["left", "bottom"] },
-  { pos: "w",  cursor: "ew-resize",   edges: ["left"] },
-]
-
-// Position within the box, as a percentage, derived from the compass name.
-const handleOffset = (pos) => ({
-  x: pos.includes("w") ? 0 : pos.includes("e") ? 100 : 50,
-  y: pos.includes("n") ? 0 : pos.includes("s") ? 100 : 50,
-})
-
-// The two stored corners — enough to bound anything unrotated.
-const rawCorners = (el) => [
-  { x: el.properties.startX, y: el.properties.startY },
-  { x: el.properties.endX, y: el.properties.endY },
-]
-
-// Every corner in world space. A rotated box element's visual footprint is its
-// rotated rectangle, so all four corners matter; lines have no rotation property
-// (their endpoints ARE their direction) and unrotated boxes need only two.
-const cornersOf = (el) => {
-  const rotation = el.type === "line" ? 0 : (el.properties.rotation ?? 0)
-  if (!rotation) return rawCorners(el)
-
-  const { startX, startY, endX, endY } = el.properties
-  const c = { x: (startX + endX) / 2, y: (startY + endY) / 2 }
-  return [
-    { x: startX, y: startY }, { x: endX, y: startY },
-    { x: endX, y: endY }, { x: startX, y: endY },
-  ].map(p => rotatePoint(p, c, rotation))
-}
-
-// Bounding box over the selection (world coords). One element is just a group of
-// one — same math for any count.
-//
-// `rotated` selects WHICH footprint, and the distinction is load-bearing: an
-// axis-aligned box (any group) must cover each member's ROTATED corners or
-// rotated members poke outside the chrome, whereas a lone box element's chrome
-// rotates *with* it — there the bounds have to stay in the element's own
-// unrotated frame, otherwise the rotation gets applied twice.
-const boundsOf = (elements, rotated = true) => {
-  const points = elements.flatMap(el => (rotated ? cornersOf(el) : rawCorners(el)))
-  const xs = points.map(p => p.x)
-  const ys = points.map(p => p.y)
-  return {
-    left: Math.min(...xs),
-    top: Math.min(...ys),
-    right: Math.max(...xs),
-    bottom: Math.max(...ys),
-  }
-}
-
-// Rotation is stored in degrees, about the element center. The angle helpers
-// (rad/deg/rotatePoint) are shared with connector geometry — see lineGeometry.
-const snap15 = (d) => Math.round(d / 15) * 15
-
-// Resize the group box by moving the handle's edges, clamped to minSize (world
-// units) so it can never cross its anchor edge (no flip).
-function resizeBox(origin, edges, dx, dy, shift, minSize) {
-  let { left, top, right, bottom } = origin
-  if (edges.includes("left"))   left   = origin.left   + dx
-  if (edges.includes("right"))  right  = origin.right  + dx
-  if (edges.includes("top"))    top    = origin.top    + dy
-  if (edges.includes("bottom")) bottom = origin.bottom + dy
-
-  // Shift locks the original aspect ratio — corners only (two edges).
-  if (shift && edges.length === 2) {
-    const w0 = origin.right - origin.left
-    const h0 = origin.bottom - origin.top
-    if (w0 !== 0 && h0 !== 0) {
-      const ar = w0 / h0
-      const w = right - left
-      const h = bottom - top
-      if (Math.abs(w / w0) > Math.abs(h / h0)) {
-        const newH = w / ar
-        if (edges.includes("top")) top = bottom - newH
-        else                       bottom = top + newH
-      } else {
-        const newW = h * ar
-        if (edges.includes("left")) left = right - newW
-        else                        right = left + newW
-      }
-    }
-  }
-
-  // Clamp each moved edge so the box keeps at least minSize and never flips.
-  if (edges.includes("left"))   left   = Math.min(left,   right  - minSize)
-  if (edges.includes("right"))  right  = Math.max(right,  left   + minSize)
-  if (edges.includes("top"))    top    = Math.min(top,    bottom - minSize)
-  if (edges.includes("bottom")) bottom = Math.max(bottom, top    + minSize)
-
-  return { left, top, right, bottom }
-}
-
-// Map a raw coordinate proportionally from the old group box to the new one.
-// Mapping raw corners (no per-element min/max) preserves a line's direction.
-// A zero-size axis degenerates to translation.
-const mapCoord = (v, oldMin, oldSize, newMin, newSize) =>
-  oldSize === 0 ? v + (newMin - oldMin) : newMin + ((v - oldMin) / oldSize) * newSize
 
 // `interactive` gates all dragging: only the select tool may resize/move/rotate.
 // `zoom` converts pointer deltas (screen px) into world units; `toWorld` converts
@@ -135,8 +25,9 @@ export default function SelectionBox({ elements, zoom, toWorld, updateElements, 
   const loneLine = elements.length === 1 && elements[0].type === "line" ? elements[0] : null
 
   // A lone box element rotates the whole chrome with it, so resize handles work
-  // in the element's local frame. Groups keep an axis-aligned box (rotation 0).
-  const rotation = !loneLine && elements.length === 1 ? (elements[0].properties.rotation ?? 0) : 0
+  // in the element's local frame. Groups keep an axis-aligned box (rotation 0),
+  // and so does a lone segment — its kind reports no rotation to carry.
+  const rotation = elements.length === 1 ? geometryOf(elements[0]).rotationOf(elements[0].properties) : 0
 
   // Only the rotating-chrome case measures in the element's local frame; every
   // other selection needs bounds that cover rotated footprints — see boundsOf.
@@ -202,7 +93,8 @@ function useBodyDrag(elements, zoom, updateElements, interactive, onActivate) {
       if (elements.length === 1) onActivate?.(elements[0].uuid)
     },
     onDown: () => {
-      origin.current = elements.map(el => ({ uuid: el.uuid, ...el.properties }))
+      // Snapshots keep `type` so each member can be transformed by its own kind.
+      origin.current = elements.map(el => ({ uuid: el.uuid, type: el.type, properties: { ...el.properties } }))
     },
     onMove: (p) => {
       if (!p.hasDragged) return
@@ -210,10 +102,7 @@ function useBodyDrag(elements, zoom, updateElements, interactive, onActivate) {
       const dy = (p.y - p.startY) / zoom
       updateElements(origin.current.map(o => ({
         uuid: o.uuid,
-        properties: {
-          startX: o.startX + dx, startY: o.startY + dy,
-          endX: o.endX + dx, endY: o.endY + dy,
-        }
+        properties: geometryOf(o).translate(o.properties, dx, dy),
       })))
     },
   })
@@ -237,7 +126,7 @@ function BoxHandle({ spec, elements, zoom, rotation, coverRotated, updateElement
         // Must match the box that was RENDERED, or the handle would resize
         // relative to a different rectangle than the one being dragged.
         box: boundsOf(elements, coverRotated),
-        members: elements.map(el => ({ uuid: el.uuid, ...el.properties })),
+        members: elements.map(el => ({ uuid: el.uuid, type: el.type, properties: { ...el.properties } })),
         rotation,
       }
     },
@@ -277,19 +166,11 @@ function BoxHandle({ spec, elements, zoom, rotation, coverRotated, updateElement
         }
       }
 
-      const oldW = o.box.right - o.box.left
-      const oldH = o.box.bottom - o.box.top
-      const newW = next.right - next.left
-      const newH = next.bottom - next.top
-
+      // Each member maps itself from the old group box into the new one — a box
+      // and a segment happen to do that identically today, but a path won't.
       updateElements(o.members.map(m => ({
         uuid: m.uuid,
-        properties: {
-          startX: mapCoord(m.startX, o.box.left, oldW, next.left, newW),
-          endX:   mapCoord(m.endX,   o.box.left, oldW, next.left, newW),
-          startY: mapCoord(m.startY, o.box.top,  oldH, next.top,  newH),
-          endY:   mapCoord(m.endY,   o.box.top,  oldH, next.top,  newH),
-        }
+        properties: geometryOf(m).mapIntoBox(m.properties, o.box, next),
       })))
     },
   })
@@ -325,8 +206,10 @@ function RotateHandle({ elements, toWorld, updateElements }) {
       origin.current = {
         center,
         startAngle: deg(Math.atan2(pw.y - center.y, pw.x - center.x)),
-        members: elements.map(el => ({ uuid: el.uuid, type: el.type, ...el.properties })),
-        single: elements.length === 1 && elements[0].type !== "line",
+        members: elements.map(el => ({ uuid: el.uuid, type: el.type, properties: { ...el.properties } })),
+        // Absolute snapping needs an angle to snap TO, which only a kind that
+        // stores its rotation has. A lone segment falls back to delta snapping.
+        single: elements.length === 1 && geometryOf(elements[0]).storesRotation,
       }
     },
     onMove: (p) => {
@@ -336,33 +219,14 @@ function RotateHandle({ elements, toWorld, updateElements }) {
       let delta = deg(Math.atan2(pw.y - o.center.y, pw.x - o.center.x)) - o.startAngle
 
       if (p.shiftKey) {
-        delta = o.single
-          ? snap15((o.members[0].rotation ?? 0) + delta) - (o.members[0].rotation ?? 0)
-          : snap15(delta)
+        const at = o.single ? geometryOf(o.members[0]).rotationOf(o.members[0].properties) : 0
+        delta = o.single ? snap15(at + delta) - at : snap15(delta)
       }
 
-      updateElements(o.members.map(m => {
-        if (m.type === "line") {
-          const s = rotatePoint({ x: m.startX, y: m.startY }, o.center, delta)
-          const e = rotatePoint({ x: m.endX, y: m.endY }, o.center, delta)
-          return { uuid: m.uuid, properties: { startX: s.x, startY: s.y, endX: e.x, endY: e.y } }
-        }
-
-        // Box member: its center orbits the group center; its size is intact.
-        const c = { x: (m.startX + m.endX) / 2, y: (m.startY + m.endY) / 2 }
-        const c2 = rotatePoint(c, o.center, delta)
-        const dx = c2.x - c.x
-        const dy = c2.y - c.y
-        return {
-          uuid: m.uuid,
-          properties: {
-            startX: m.startX + dx, startY: m.startY + dy,
-            endX: m.endX + dx, endY: m.endY + dy,
-            // Whole degrees: plenty for hand-rotation, keeps the panel readable.
-            rotation: Math.round((m.rotation ?? 0) + delta),
-          }
-        }
-      }))
+      updateElements(o.members.map(m => ({
+        uuid: m.uuid,
+        properties: geometryOf(m).rotate(m.properties, o.center, delta),
+      })))
     },
   })
 

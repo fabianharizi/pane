@@ -1,24 +1,15 @@
-// Pure geometry for line elements. Lines are connectors: either endpoint may be
-// BOUND to another element's edge — the binding stores `{ uuid, side }` and the
-// endpoint glues to that side's midpoint (a fixed edge anchor that tracks the
-// target through move/resize/rotate). Bindings are resolved at READ time: the
-// stored coords of a bound end are only a fallback/cache, and every reader
-// (render, bounds, marquee, panel) derives the effective endpoints from the
-// target's current geometry. Nothing here touches React or the DOM.
+// Routing and binding for line elements. Lines are connectors: either endpoint
+// may be BOUND to another element's edge — the binding stores `{ uuid, side }`
+// and the endpoint glues to that side's midpoint (a fixed edge anchor that
+// tracks the target through move/resize/rotate). Bindings are resolved at READ
+// time: the stored coords of a bound end are only a fallback/cache, and every
+// reader (render, bounds, marquee, panel) derives the effective endpoints from
+// the target's current geometry. Nothing here touches React or the DOM.
+//
+// The shared primitives this is built on (rad/deg/rotatePoint/bboxOf) live in
+// utils/geometry — they aren't line-specific and every kind of element needs them.
 
-export const rad = (d) => d * Math.PI / 180
-export const deg = (r) => r * 180 / Math.PI
-
-// Rotate point p about center c by `degrees`.
-export const rotatePoint = (p, c, degrees) => {
-  const a = rad(degrees)
-  const dx = p.x - c.x
-  const dy = p.y - c.y
-  return {
-    x: c.x + dx * Math.cos(a) - dy * Math.sin(a),
-    y: c.y + dx * Math.sin(a) + dy * Math.cos(a),
-  }
-}
+import { rad, rotatePoint, bboxOf } from "../geometry/primitives"
 
 // Outward unit normals of each side, in the element's local (unrotated) frame.
 const NORMALS = {
@@ -27,13 +18,6 @@ const NORMALS = {
   bottom: { x: 0, y: 1 },
   left:   { x: -1, y: 0 },
 }
-
-const bboxOf = ({ startX, startY, endX, endY }) => ({
-  left: Math.min(startX, endX),
-  top: Math.min(startY, endY),
-  right: Math.max(startX, endX),
-  bottom: Math.max(startY, endY),
-})
 
 // World-space anchor of a binding side: the side's midpoint on the element's
 // bounding box, rotated with the element about its center. Side midpoints lie
